@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>The Backrooms 3D - Full Mechanics</title>
+    <title>The Backrooms 3D - Optimized & Expanded</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -40,7 +40,7 @@
             justify-content: center; align-items: center; color: #d1cc84;
             pointer-events: auto; z-index: 10; display: none;
         }
-        #start-screen { display: flex; } /* Initial display */
+        #start-screen { display: flex; }
         
         h1 {
             font-size: 40px; margin-bottom: 15px; letter-spacing: 5px; color: #e6df75;
@@ -104,7 +104,7 @@
 
     <div id="ui">
         <div class="hud-text" id="level-display">LEVEL 0 - THE BACKROOMS</div>
-        <div class="hud-text" id="status-text">【目標】赤い「EXIT」の扉を探せ</div>
+        <div class="hud-text" id="status-text">【目標】広大な迷路から赤い「EXIT」の扉を探せ</div>
     </div>
 
     <!-- Mobile UI Buttons -->
@@ -155,17 +155,16 @@
         let lastStepTime = 0;
 
         function startBGM() {
-            if (bgmOscillator) return; // 既に鳴っていればスルー
+            if (bgmOscillator) return;
             if (audioCtx.state === 'suspended') audioCtx.resume();
             
-            // バックルームの重低音ハムノイズ
             bgmOscillator = audioCtx.createOscillator();
             bgmOscillator.type = 'sine';
-            bgmOscillator.frequency.value = 55; // 低いブーンという音
+            bgmOscillator.frequency.value = 55;
 
             const lfo = audioCtx.createOscillator();
             lfo.type = 'sine';
-            lfo.frequency.value = 0.5; // ゆっくり音を揺らす
+            lfo.frequency.value = 0.5;
             const lfoGain = audioCtx.createGain();
             lfoGain.gain.value = 5;
             lfo.connect(lfoGain);
@@ -173,7 +172,7 @@
             lfo.start();
 
             bgmGain = audioCtx.createGain();
-            bgmGain.gain.value = 0.03; // かなり小さい音量
+            bgmGain.gain.value = 0.03;
 
             bgmOscillator.connect(bgmGain);
             bgmGain.connect(audioCtx.destination);
@@ -221,13 +220,13 @@
                 name: "LEVEL 1 - HABITABLE ZONE",
                 wallBase: '#555555', wallLine: '#333333', floorBase: '#444444', floorDot: '#222222',
                 ceilColor: 0x333333, ambientColor: 0xffffff, ambientIntensity: 0.7, fogColor: 0x222222,
-                entities: ["hound"], design: 1, ceilingHeight: 4.5
+                entities: ["hound", "howler"], design: 1, ceilingHeight: 4.5
             },
             {
                 name: "LEVEL 3 - ELECTRICAL STATION",
                 wallBase: '#3a1f11', wallLine: '#1f1009', floorBase: '#1a1a1a', floorDot: '#333333',
                 ceilColor: 0x111111, ambientColor: 0xffaa55, ambientIntensity: 0.6, fogColor: 0x1a0502,
-                entities: ["smiler", "faceling"], design: 3, ceilingHeight: 3.5
+                entities: ["smiler", "faceling", "hound"], design: 3, ceilingHeight: 3.5
             }
         ];
         let currentLevel = 0;
@@ -235,15 +234,15 @@
         // --- ENCYCLOPEDIA ---
         const encyclopedia = {
             entity: [
-                { name: "ハウラー (Bacteria)", desc: "Level 0に生息。針金が絡み合ったような真っ黒な体を持つ。巨体で這い寄ってくる。" },
-                { name: "スマイリー (Smiler)", desc: "暗闇に浮かぶ発光する笑顔。姿は見えず、暗闇と同化している。" },
-                { name: "ハウンド (Hound)", desc: "Level 1に生息。四つん這いで骨格が歪んだ人型。獣のように素早く襲ってくる。" },
-                { name: "フェイスリング (Faceling)", desc: "Level 3に生息。スーツを着た人型だが、顔のパーツが完全に欠落している。" }
+                { name: "ハウラー (Bacteria)", desc: "Level 0に生息。不気味にうねる針金のような体を持つ。執拗にプレイヤーを追う。" },
+                { name: "スマイリー (Smiler)", desc: "暗闇に浮かぶ発光する笑顔。空間を浮遊し、プレイヤーに迫る。" },
+                { name: "ハウンド (Hound)", desc: "Level 1に生息。四つん這いで這いずる獣のような危険な存在。" },
+                { name: "フェイスリング (Faceling)", desc: "Level 3に生息。スーツを着た人型で、顔のない異形の存在。" }
             ],
             level: [
-                { name: "Level 0 - The Lobby", desc: "黄色い壁紙と湿った絨毯の迷宮。" },
-                { name: "Level 1 - Habitable Zone", desc: "天井が高く、コンクリートの柱が立ち並ぶ巨大な倉庫。" },
-                { name: "Level 3 - Electrical Station", desc: "灼熱のパイプが天井を這う、狭くて暗い配電所。" }
+                { name: "Level 0 - The Lobby", desc: "黄色い壁紙と湿った絨毯の広大な迷宮。" },
+                { name: "Level 1 - Habitable Zone", desc: "天井が高く、コンクリート柱が立ち並ぶ巨大倉庫エリア。" },
+                { name: "Level 3 - Electrical Station", desc: "灼熱のパイプが這う、複雑で暗い配電所。" }
             ]
         };
 
@@ -258,42 +257,43 @@
         }
         function closeBook() { document.getElementById('book-modal').style.display = 'none'; }
 
-        // --- MAP GENERATOR (ランダム生成) ---
-        const MAP_SIZE = 16;
+        // --- MAP GENERATOR (本格的迷路: 穴掘り法による広大・複雑なマップ) ---
+        const MAP_SIZE = 25; // 奇数サイズで複雑化
         let map = [];
         let exitPos = {x:0, z:0};
         
         function generateRandomMap(designType) {
             let newMap = Array.from({length: MAP_SIZE}, () => Array(MAP_SIZE).fill(1));
             
-            // ランダムウォークによる通路生成
-            let x = 1, z = 1;
-            newMap[z][x] = 0;
-            for(let i=0; i < MAP_SIZE * MAP_SIZE * 2.5; i++) {
-                let dir = Math.floor(Math.random() * 4);
-                if(dir===0 && x > 2) x -= 1;
-                if(dir===1 && x < MAP_SIZE-3) x += 1;
-                if(dir===2 && z > 2) z -= 1;
-                if(dir===3 && z < MAP_SIZE-3) z += 1;
+            // 穴掘り法による迷路生成
+            function carve(x, z) {
                 newMap[z][x] = 0;
+                let dirs = [[0, -2], [0, 2], [-2, 0], [2, 0]];
+                dirs.sort(() => Math.random() - 0.5);
+                for (let [dx, dz] of dirs) {
+                    let nx = x + dx, nz = z + dz;
+                    if (nx > 0 && nx < MAP_SIZE - 1 && nz > 0 && nz < MAP_SIZE - 1 && newMap[nz][nx] === 1) {
+                        newMap[z + dz / 2][x + dx / 2] = 0;
+                        carve(nx, nz);
+                    }
+                }
+            }
+            carve(1, 1);
 
-                // Level 1: 柱(2)をランダムに配置
-                if (designType === 1 && Math.random() < 0.05 && newMap[z][x] === 0) {
-                    newMap[z][x] = 2;
+            // Level 1: 柱(2)をランダム配置
+            for (let r = 1; r < MAP_SIZE - 1; r++) {
+                for (let c = 1; c < MAP_SIZE - 1; c++) {
+                    if (designType === 1 && Math.random() < 0.06 && newMap[r][c] === 0 && !(r===1 && c===1)) {
+                        newMap[r][c] = 2;
+                    }
                 }
             }
 
-            // 外周は確実に壁にする
-            for(let i=0; i<MAP_SIZE; i++) {
-                newMap[0][i] = 1; newMap[MAP_SIZE-1][i] = 1;
-                newMap[i][0] = 1; newMap[i][MAP_SIZE-1] = 1;
-            }
-            
-            // スタート地点(左上)の確保
+            // スタート地点確保
             newMap[1][1] = 0; newMap[1][2] = 0; newMap[2][1] = 0;
             
-            // ゴール地点(右下周辺の遠いところ)の確保
-            let ex = MAP_SIZE-2, ez = MAP_SIZE-2;
+            // ゴール地点(最奥)
+            let ex = MAP_SIZE - 2, ez = MAP_SIZE - 2;
             newMap[ez][ex] = 0; newMap[ez][ex-1] = 0; newMap[ez-1][ex] = 0;
             exitPos = {x: ex, z: ez};
 
@@ -308,7 +308,6 @@
         let exitDoor = null;
         let entities = [];
 
-        // Input States
         let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false, isRunning = false;
         let yaw = Math.PI/4, pitch = 0;
 
@@ -316,24 +315,23 @@
         const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
         let isEventsSetup = false;
 
-        // UI Elements
         const startScreen = document.getElementById('start-screen');
         const pauseScreen = document.getElementById('pause-screen');
         const titleText = document.getElementById('title-text');
         const descText = document.getElementById('desc-text');
         const mobilePauseBtn = document.getElementById('mobile-pause-btn');
 
-        // --- TEXTURE GENERATORS ---
+        // --- TEXTURE GENERATORS (軽量化) ---
         function createWallTexture(baseCol, lineCol) {
             const canvas = document.createElement('canvas');
-            canvas.width = 256; canvas.height = 256;
+            canvas.width = 128; canvas.height = 128; // 軽量化
             const ctx = canvas.getContext('2d');
-            ctx.fillStyle = baseCol; ctx.fillRect(0, 0, 256, 256);
-            ctx.strokeStyle = lineCol; ctx.lineWidth = 4;
-            for(let i = 0; i < 256; i += 16) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 256); ctx.stroke(); }
-            for (let i = 0; i < 2000; i++) {
+            ctx.fillStyle = baseCol; ctx.fillRect(0, 0, 128, 128);
+            ctx.strokeStyle = lineCol; ctx.lineWidth = 3;
+            for(let i = 0; i < 128; i += 16) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 128); ctx.stroke(); }
+            for (let i = 0; i < 300; i++) {
                 ctx.fillStyle = Math.random() > 0.5 ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.05)';
-                ctx.fillRect(Math.random()*256, Math.random()*256, 2, 2);
+                ctx.fillRect(Math.random()*128, Math.random()*128, 2, 2);
             }
             return new THREE.CanvasTexture(canvas);
         }
@@ -345,11 +343,10 @@
             ctx.fillStyle = baseCol; ctx.fillRect(0, 0, 128, 128);
             
             if (designType === 3) {
-                // Level 3 グリッド床
                 ctx.strokeStyle = dotCol; ctx.lineWidth = 2;
                 for(let i=0; i<128; i+=16){ ctx.strokeRect(i, 0, 16, 128); ctx.strokeRect(0, i, 128, 16); }
             } else {
-                for (let i = 0; i < 1500; i++) {
+                for (let i = 0; i < 300; i++) {
                     ctx.fillStyle = dotCol; ctx.fillRect(Math.random()*128, Math.random()*128, 2, 2);
                 }
             }
@@ -363,7 +360,7 @@
             const canvas = document.createElement('canvas');
             canvas.width = 256; canvas.height = 256;
             const ctx = canvas.getContext('2d');
-            ctx.clearRect(0,0,256,256); // 背景を完全に透明に
+            ctx.clearRect(0,0,256,256);
             ctx.fillStyle = '#ffffff'; ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 20;
             ctx.beginPath(); ctx.ellipse(80, 90, 20, 35, -0.2, 0, Math.PI * 2);
             ctx.ellipse(176, 90, 20, 35, 0.2, 0, Math.PI * 2); ctx.fill();
@@ -387,28 +384,19 @@
             return new THREE.CanvasTexture(canvas);
         }
 
-        // --- ENTITY CREATORS (本家準拠の造形) ---
+        // --- ENTITY CREATORS (リアル化 & 本家準拠) ---
         function createHowlerMesh() {
-            // Bacteria / Wireframe
             const group = new THREE.Group();
-            const mat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+            const mat = new THREE.MeshBasicMaterial({ color: 0x050505 });
             
-            const spine = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 3.5, 5), mat);
-            spine.position.y = 1.75; group.add(spine);
+            const spine = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.04, 4.0, 5), mat);
+            spine.position.y = 2.0; group.add(spine);
             
-            // 歪んだ手足
-            for(let i=0; i<4; i++) {
-                const limb = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 2, 5), mat);
-                limb.position.set((Math.random()-0.5), 1.5 + Math.random(), (Math.random()-0.5));
+            for(let i=0; i<6; i++) {
+                const limb = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.02, 2.5, 4), mat);
+                limb.position.set((Math.random()-0.5)*0.8, 1.8 + Math.random()*1.2, (Math.random()-0.5)*0.8);
                 limb.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, Math.random()*Math.PI);
                 group.add(limb);
-            }
-            // 頭部の混沌
-            for(let i=0; i<8; i++) {
-                const tendril = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 1.2, 3), mat);
-                tendril.position.set(0, 3.2, 0);
-                tendril.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, Math.random()*Math.PI);
-                group.add(tendril);
             }
             return group;
         }
@@ -416,50 +404,47 @@
         function createSmilerMesh() {
             const group = new THREE.Group();
             const mat = new THREE.MeshBasicMaterial({ map: createSmilerTexture(), transparent: true, depthWrite: false });
-            const face = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.5), mat);
+            const face = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 1.8), mat);
             face.position.y = 1.6; group.add(face);
-            const light = new THREE.PointLight(0xffffff, 0.5, 4);
+            const light = new THREE.PointLight(0xffffff, 0.8, 5);
             light.position.y = 1.6; group.add(light);
             return group;
         }
 
         function createHoundMesh() {
-            // 四つん這いの獣型
             const group = new THREE.Group();
-            const mat = new THREE.MeshStandardMaterial({ color: 0x221105, roughness: 1.0 });
-            const skinMat = new THREE.MeshStandardMaterial({ color: 0x886655, roughness: 0.8 });
+            const mat = new THREE.MeshStandardMaterial({ color: 0x2b1d11, roughness: 0.9 });
+            const skinMat = new THREE.MeshStandardMaterial({ color: 0x775544, roughness: 0.8 });
 
-            const torso = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.4, 1.2), mat);
-            torso.position.y = 0.5; group.add(torso);
+            const torso = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.5, 1.4), mat);
+            torso.position.y = 0.45; group.add(torso);
             
-            // 手足
-            const legGeo = new THREE.CylinderGeometry(0.08, 0.05, 0.6);
-            const fl = new THREE.Mesh(legGeo, skinMat); fl.position.set(0.3, 0.3, 0.5); group.add(fl);
-            const fr = new THREE.Mesh(legGeo, skinMat); fr.position.set(-0.3, 0.3, 0.5); group.add(fr);
-            const bl = new THREE.Mesh(legGeo, skinMat); bl.position.set(0.2, 0.3, -0.5); group.add(bl);
-            const br = new THREE.Mesh(legGeo, skinMat); br.position.set(-0.2, 0.3, -0.5); group.add(br);
+            const legGeo = new THREE.CylinderGeometry(0.08, 0.05, 0.7);
+            const fl = new THREE.Mesh(legGeo, skinMat); fl.position.set(0.32, 0.3, 0.6); group.add(fl);
+            const fr = new THREE.Mesh(legGeo, skinMat); fr.position.set(-0.32, 0.3, 0.6); group.add(fr);
+            const bl = new THREE.Mesh(legGeo, skinMat); bl.position.set(0.25, 0.3, -0.6); group.add(bl);
+            const br = new THREE.Mesh(legGeo, skinMat); br.position.set(-0.25, 0.3, -0.6); group.add(br);
 
-            // 頭 (髪の毛で覆われている)
-            const head = new THREE.Mesh(new THREE.SphereGeometry(0.3), mat);
-            head.position.set(0, 0.6, 0.8); group.add(head);
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.32), mat);
+            head.position.set(0, 0.55, 0.9); group.add(head);
 
             return group;
         }
 
         function createFacelingMesh() {
             const group = new THREE.Group();
-            const skinMat = new THREE.MeshStandardMaterial({ color: 0xeecba6 });
-            const suitMat = new THREE.MeshStandardMaterial({ color: 0x111111 }); // 黒スーツ
+            const skinMat = new THREE.MeshStandardMaterial({ color: 0xdeb887 });
+            const suitMat = new THREE.MeshStandardMaterial({ color: 0x181818 });
             
-            const torso = new THREE.Mesh(new THREE.BoxGeometry(0.6, 1.0, 0.3), suitMat);
-            torso.position.y = 1.2; group.add(torso);
+            const torso = new THREE.Mesh(new THREE.BoxGeometry(0.65, 1.1, 0.35), suitMat);
+            torso.position.y = 1.25; group.add(torso);
             
-            const legGeo = new THREE.CylinderGeometry(0.12, 0.1, 0.8);
-            const lLeg = new THREE.Mesh(legGeo, suitMat); lLeg.position.set(0.15, 0.4, 0); group.add(lLeg);
-            const rLeg = new THREE.Mesh(legGeo, suitMat); rLeg.position.set(-0.15, 0.4, 0); group.add(rLeg);
+            const legGeo = new THREE.CylinderGeometry(0.12, 0.1, 0.85);
+            const lLeg = new THREE.Mesh(legGeo, suitMat); lLeg.position.set(0.16, 0.42, 0); group.add(lLeg);
+            const rLeg = new THREE.Mesh(legGeo, suitMat); rLeg.position.set(-0.16, 0.42, 0); group.add(rLeg);
 
-            const head = new THREE.Mesh(new THREE.SphereGeometry(0.22), skinMat);
-            head.position.y = 1.9; head.scale.z = 1.2; // のっぺらぼう
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.23), skinMat);
+            head.position.y = 1.95; head.scale.z = 1.25;
             group.add(head);
 
             return group;
@@ -479,7 +464,6 @@
             const levelD = levelsData[currentLevel];
             document.getElementById('level-display').innerText = levelD.name;
 
-            // マップのランダム生成
             map = generateRandomMap(levelD.design);
 
             const container = document.getElementById('canvas-container');
@@ -487,15 +471,15 @@
             
             scene = new THREE.Scene();
             scene.background = new THREE.Color(levelD.fogColor);
-            scene.fog = new THREE.FogExp2(levelD.fogColor, 0.035);
+            scene.fog = new THREE.FogExp2(levelD.fogColor, 0.03);
 
             if (!camera) camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
             camera.position.set(1.5 * UNIT_SIZE, 1.6, 1.5 * UNIT_SIZE);
             yaw = Math.PI/4; pitch = 0;
 
             if (!renderer) {
-                renderer = new THREE.WebGLRenderer({ antialias: true });
-                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                renderer = new THREE.WebGLRenderer({ antialias: false }); // 軽量化
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5)); // ピクセル比最適化
             }
             renderer.setSize(window.innerWidth, window.innerHeight);
             container.appendChild(renderer.domElement);
@@ -532,7 +516,7 @@
                         const wall = new THREE.Mesh(wallGeo, wallMat);
                         wall.position.set(c * UNIT_SIZE + UNIT_SIZE / 2, levelD.ceilingHeight/2, r * UNIT_SIZE + UNIT_SIZE / 2);
                         scene.add(wall);
-                    } else if (map[r][c] === 2) { // Level 1 柱
+                    } else if (map[r][c] === 2) {
                         const pillar = new THREE.Mesh(pillarGeo, pillarMat);
                         pillar.position.set(c * UNIT_SIZE + UNIT_SIZE / 2, levelD.ceilingHeight/2, r * UNIT_SIZE + UNIT_SIZE / 2);
                         scene.add(pillar);
@@ -540,7 +524,7 @@
                         const ceilLightMesh = new THREE.Mesh(lightGeo, new THREE.MeshBasicMaterial({ color: 0xffffff }));
                         ceilLightMesh.position.set(c * UNIT_SIZE + UNIT_SIZE/2, levelD.ceilingHeight - 0.05, r * UNIT_SIZE + UNIT_SIZE/2);
                         scene.add(ceilLightMesh);
-                        const pLight = new THREE.PointLight(0xfff5cc, levelD.ambientIntensity, 12);
+                        const pLight = new THREE.PointLight(0xfff5cc, levelD.ambientIntensity, 10);
                         pLight.position.set(c * UNIT_SIZE + UNIT_SIZE/2, levelD.ceilingHeight - 0.3, r * UNIT_SIZE + UNIT_SIZE/2);
                         scene.add(pLight);
                         lightsList.push({ light: pLight, baseIntensity: levelD.ambientIntensity, mesh: ceilLightMesh });
@@ -548,10 +532,9 @@
                 }
             }
 
-            // Level 3専用: 天井のパイプ装飾
             if (levelD.design === 3) {
                 const pipeMat = new THREE.MeshStandardMaterial({ color: 0x442211, roughness: 0.4, metalness: 0.5 });
-                for(let i=1; i<MAP_SIZE; i+=2) {
+                for(let i=2; i<MAP_SIZE; i+=3) {
                     const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, totalMapSize), pipeMat);
                     pipe.rotation.z = Math.PI/2;
                     pipe.position.set(totalMapSize/2, levelD.ceilingHeight - 0.3, i * UNIT_SIZE);
@@ -559,22 +542,21 @@
                 }
             }
 
-            // Spawn Exit (ランダム生成した位置)
+            // EXIT扉配置
             exitDoor = createExitDoorMesh();
             exitDoor.position.set(exitPos.x * UNIT_SIZE + UNIT_SIZE/2, 0, exitPos.z * UNIT_SIZE + UNIT_SIZE/2);
             scene.add(exitDoor);
 
-            // Spawn Entities
-            levelD.entities.forEach((eType, index) => {
+            // エンティティ配置
+            levelD.entities.forEach((eType) => {
                 let mesh, speed, name;
-                if (eType === "howler") { mesh = createHowlerMesh(); speed = 0.048; name = "ハウラー"; }
-                if (eType === "smiler") { mesh = createSmilerMesh(); speed = 0.04; name = "スマイリー"; }
-                if (eType === "hound") { mesh = createHoundMesh(); speed = 0.065; name = "ハウンド"; }
-                if (eType === "faceling") { mesh = createFacelingMesh(); speed = 0.042; name = "フェイスリング"; }
+                if (eType === "howler") { mesh = createHowlerMesh(); speed = 0.045; name = "ハウラー"; }
+                if (eType === "smiler") { mesh = createSmilerMesh(); speed = 0.038; name = "スマイリー"; }
+                if (eType === "hound") { mesh = createHoundMesh(); speed = 0.06; name = "ハウンド"; }
+                if (eType === "faceling") { mesh = createFacelingMesh(); speed = 0.04; name = "フェイスリング"; }
                 
-                // ランダムな空きマスに配置
                 let ex = 0, ez = 0;
-                while(map[ez][ex] !== 0 || (ex < 4 && ez < 4)) {
+                while(map[ez][ex] !== 0 || (ex < 6 && ez < 6)) {
                     ex = Math.floor(Math.random() * (MAP_SIZE-2)) + 1;
                     ez = Math.floor(Math.random() * (MAP_SIZE-2)) + 1;
                 }
@@ -603,7 +585,7 @@
                 if (e.code === 'KeyA' || e.code === 'ArrowLeft') moveLeft = true;
                 if (e.code === 'KeyD' || e.code === 'ArrowRight') moveRight = true;
                 if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') isRunning = true;
-                if (e.code === 'Escape' && isPlaying) togglePause(); // PC ポーズ
+                if (e.code === 'Escape' && isPlaying) togglePause();
             });
             window.addEventListener('keyup', (e) => {
                 if (e.code === 'KeyW' || e.code === 'ArrowUp') moveForward = false;
@@ -621,7 +603,6 @@
                 }
             });
 
-            // Pointer Lock Event (ESCを押した時の自動解除検知)
             document.addEventListener('pointerlockchange', () => {
                 if (!isMobile && document.pointerLockElement !== document.body && isPlaying && !isPaused) {
                     togglePause();
@@ -694,14 +675,25 @@
             });
         }
 
-        // --- LOGIC ---
+        // --- COLLISION DETECTION ---
         function checkWallCollision(newX, newZ) {
-            const padding = 0.5;
+            const padding = 0.45;
             const pts = [{x:newX+padding, z:newZ+padding}, {x:newX-padding, z:newZ+padding}, {x:newX+padding, z:newZ-padding}, {x:newX-padding, z:newZ-padding}];
             for (let pt of pts) {
                 const gX = Math.floor(pt.x / UNIT_SIZE), gZ = Math.floor(pt.z / UNIT_SIZE);
                 if (gX < 0 || gX >= MAP_SIZE || gZ < 0 || gZ >= MAP_SIZE) return true;
-                if (map[gZ][gX] === 1 || map[gZ][gX] === 2) return true; // 壁(1)か柱(2)
+                if (map[gZ][gX] === 1 || map[gZ][gX] === 2) return true;
+            }
+            return false;
+        }
+
+        function checkEntityCollision(newX, newZ) {
+            const padding = 0.35;
+            const pts = [{x:newX+padding, z:newZ+padding}, {x:newX-padding, z:newZ+padding}, {x:newX+padding, z:newZ-padding}, {x:newX-padding, z:newZ-padding}];
+            for (let pt of pts) {
+                const gX = Math.floor(pt.x / UNIT_SIZE), gZ = Math.floor(pt.z / UNIT_SIZE);
+                if (gX < 0 || gX >= MAP_SIZE || gZ < 0 || gZ >= MAP_SIZE) return true;
+                if (map[gZ][gX] === 1 || map[gZ][gX] === 2) return true;
             }
             return false;
         }
@@ -736,21 +728,40 @@
         }
 
         function updateEntities() {
-            for (let ent of entities) {
+            let time = Date.now() * 0.005;
+            for (let i = 0; i < entities.length; i++) {
+                let ent = entities[i];
                 const dx = camera.position.x - ent.mesh.position.x;
                 const dz = camera.position.z - ent.mesh.position.z;
                 const dist = Math.hypot(dx, dz);
                 
                 if (ent.type === "smiler") ent.mesh.lookAt(camera.position.x, 1.6, camera.position.z);
-                else if (ent.type === "hound") ent.mesh.lookAt(camera.position.x, 0.5, camera.position.z);
+                else if (ent.type === "hound") ent.mesh.lookAt(camera.position.x, 0.4, camera.position.z);
                 else ent.mesh.lookAt(camera.position.x, 0, camera.position.z);
 
-                if (dist < 20) {
+                // エンティティのアニメーション (リアルなうねり・這いずり)
+                if (ent.type === "howler") {
+                    ent.mesh.position.y = Math.sin(time * 2 + i) * 0.15;
+                    ent.mesh.rotation.z = Math.sin(time + i) * 0.08;
+                } else if (ent.type === "hound") {
+                    ent.mesh.position.y = Math.abs(Math.sin(time * 4)) * 0.12;
+                } else if (ent.type === "faceling") {
+                    ent.mesh.rotation.z = Math.sin(time * 2) * 0.04;
+                } else if (ent.type === "smiler") {
+                    ent.mesh.position.y = 1.6 + Math.sin(time * 3) * 0.2;
+                }
+
+                if (dist < 22) {
                     const stepX = (dx / dist) * ent.speed;
                     const stepZ = (dz / dist) * ent.speed;
-                    // エンティティの簡易壁判定
-                    if (!checkWallCollision(ent.mesh.position.x + stepX, ent.mesh.position.z)) ent.mesh.position.x += stepX;
-                    if (!checkWallCollision(ent.mesh.position.x, ent.mesh.position.z + stepZ)) ent.mesh.position.z += stepZ;
+                    
+                    // 厳密な当たり判定で壁すり抜け防止
+                    if (!checkEntityCollision(ent.mesh.position.x + stepX, ent.mesh.position.z)) {
+                        ent.mesh.position.x += stepX;
+                    }
+                    if (!checkEntityCollision(ent.mesh.position.x, ent.mesh.position.z + stepZ)) {
+                        ent.mesh.position.z += stepZ;
+                    }
                 }
 
                 if (dist < 1.3) gameOver(ent.name);
@@ -763,7 +774,7 @@
 
         // --- STATE MANAGEMENT ---
         function startGame() {
-            startBGM(); // 初回クリックでBGM開始
+            startBGM();
             startScreen.style.display = 'none';
             pauseScreen.style.display = 'none';
             isPlaying = true; isPaused = false;
