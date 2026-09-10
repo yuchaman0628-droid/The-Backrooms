@@ -170,7 +170,7 @@
 
     <div id="ui">
         <div class="hud-text">LEVEL 0 - THE BACKROOMS</div>
-        <div class="hud-text" id="status-text">【懐中電灯装備】ハウラーとスマイリーに注意せよ...</div>
+        <div class="hud-text" id="status-text">【目標】ハウラーとスマイリーを避け、赤い「EXIT」の扉へ到達せよ！</div>
     </div>
 
     <!-- Start / Game Over Screen -->
@@ -178,7 +178,7 @@
         <h1 id="title-text">THE BACKROOMS</h1>
         <p id="desc-text">
             蛍光灯が明滅する黄色い迷宮。<br>
-            異形「ハウラー」と暗闇の「スマイリー」から逃げ延びろ。<br><br>
+            異形「ハウラー」と暗闇の「スマイリー」を避け、脱出口（EXIT）を探せ。<br><br>
             <b>[PC操作]</b> WASD移動 / マウス視点移動<br>
             <b>[スマホ操作]</b> 左スティック移動 / 右エリアドラッグ視点移動
         </p>
@@ -218,10 +218,12 @@
 
         // --- 2. GAME SETUP & VARIABLES ---
         let scene, camera, renderer;
-        let flashlight, flashlightBeam;
         let ambientLight;
         let isPlaying = false;
         let lightsList = [];
+
+        // Exit Door Object
+        let exitDoor = null;
 
         // Input States
         let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
@@ -323,27 +325,48 @@
             return new THREE.CanvasTexture(canvas);
         }
 
-        // --- 4. ENTITY CREATORS (REALISTIC BUILD) ---
+        // EXIT Text Door Texture
+        function createExitDoorTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256; canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = '#8b0000'; // Red Door
+            ctx.fillRect(0, 0, 256, 512);
+
+            ctx.strokeStyle = '#330000';
+            ctx.lineWidth = 10;
+            ctx.strokeRect(10, 10, 236, 492);
+
+            // EXIT Sign
+            ctx.fillStyle = '#00ff00';
+            ctx.font = 'bold 50px Arial';
+            ctx.textAlign = 'center';
+            ctx.shadowColor = '#00ff00';
+            ctx.shadowBlur = 15;
+            ctx.fillText('EXIT', 128, 100);
+
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        // --- 4. ENTITY CREATORS ---
         
-        // 1. Howler (ハウラー): ワイヤー・黒い管が絡み合った不気味な高身長の人型
+        // 1. Howler
         function createHowlerMesh() {
             const group = new THREE.Group();
             const mat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3, metalness: 0.8 });
 
-            // Body (Spine/Torso)
             const bodyGeo = new THREE.CylinderGeometry(0.15, 0.05, 2.8, 8);
             const body = new THREE.Mesh(bodyGeo, mat);
             body.position.y = 1.4;
             group.add(body);
 
-            // Head (Deformed Mesh)
             const headGeo = new THREE.IcosahedronGeometry(0.3, 1);
             const head = new THREE.Mesh(headGeo, mat);
             head.position.y = 2.9;
             head.scale.set(0.8, 1.4, 0.8);
             group.add(head);
 
-            // Long Twisted Arms
             for (let side of [-1, 1]) {
                 const armGeo = new THREE.CylinderGeometry(0.04, 0.02, 2.2, 6);
                 const arm = new THREE.Mesh(armGeo, mat);
@@ -353,7 +376,6 @@
                 group.add(arm);
             }
 
-            // Tendrils (絡みつく黒い触手・ワイヤー)
             for (let i = 0; i < 6; i++) {
                 const tendrilGeo = new THREE.TorusGeometry(0.3, 0.02, 4, 12, Math.PI);
                 const tendril = new THREE.Mesh(tendrilGeo, mat);
@@ -365,11 +387,10 @@
             return group;
         }
 
-        // 2. Smiler (スマイリー): 闇の中に不気味な白い顔だけが浮かび上がる怪異
+        // 2. Smiler
         function createSmilerMesh() {
             const group = new THREE.Group();
             
-            // Face Plane
             const smilerTex = createSmilerTexture();
             const planeGeo = new THREE.PlaneGeometry(1.8, 1.8);
             const planeMat = new THREE.MeshBasicMaterial({
@@ -381,10 +402,26 @@
             face.position.y = 1.5;
             group.add(face);
 
-            // Subtle Dim Light around Smiler
             const smilerLight = new THREE.PointLight(0xffffff, 0.8, 3);
             smilerLight.position.y = 1.5;
             group.add(smilerLight);
+
+            return group;
+        }
+
+        // 3. EXIT Door (Clear Condition Target)
+        function createExitDoorMesh() {
+            const group = new THREE.Group();
+            const doorGeo = new THREE.BoxGeometry(2, 2.8, 0.1);
+            const doorMat = new THREE.MeshStandardMaterial({ map: createExitDoorTexture() });
+            const door = new THREE.Mesh(doorGeo, doorMat);
+            door.position.y = 1.4;
+            group.add(door);
+
+            // Red/Green Exit Light
+            const exitLight = new THREE.PointLight(0x00ff00, 1.5, 6);
+            exitLight.position.set(0, 2, 0.5);
+            group.add(exitLight);
 
             return group;
         }
@@ -394,8 +431,8 @@
             const container = document.getElementById('canvas-container');
 
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x020202);
-            scene.fog = new THREE.FogExp2(0x020202, 0.075);
+            scene.background = new THREE.Color(0x1a190e); // 部屋全体を明るく
+            scene.fog = new THREE.FogExp2(0x1a190e, 0.025);
 
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
             camera.position.set(player.x, 1.6, player.z);
@@ -405,29 +442,9 @@
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             container.appendChild(renderer.domElement);
 
-            // Ambient Light
-            ambientLight = new THREE.AmbientLight(0x222218, 0.4);
+            // 【調整】全体を明るく照らす環境光（懐中電灯なしでもクッキリ見えます）
+            ambientLight = new THREE.AmbientLight(0xd1c78e, 1.2);
             scene.add(ambientLight);
-
-            // --- FLASHLIGHT (リアルな懐中電灯) ---
-            flashlight = new THREE.SpotLight(0xfffaed, 3.5, 25, Math.PI / 6, 0.3, 1.5);
-            camera.add(flashlight);
-            flashlight.position.set(0.2, -0.2, 0); // 手元に配置
-            flashlight.target.position.set(0, 0, -1);
-            camera.add(flashlight.target);
-
-            // Flashlight Beam Cone (光のすじ)
-            const beamGeo = new THREE.ConeGeometry(2.5, 12, 16, 1, true);
-            const beamMat = new THREE.MeshBasicMaterial({
-                color: 0xfffaed,
-                transparent: true,
-                opacity: 0.03,
-                side: THREE.DoubleSide
-            });
-            flashlightBeam = new THREE.Mesh(beamGeo, beamMat);
-            flashlightBeam.rotation.x = -Math.PI / 2;
-            flashlightBeam.position.set(0, 0, -6);
-            camera.add(flashlightBeam);
 
             scene.add(camera);
 
@@ -472,14 +489,19 @@
                         scene.add(ceilLightMesh);
 
                         // ポイントライト（照明）
-                        const pLight = new THREE.PointLight(0xfff5cc, 0.8, 9);
+                        const pLight = new THREE.PointLight(0xfff5cc, 1.2, 12);
                         pLight.position.set(c * UNIT_SIZE + UNIT_SIZE/2, 2.7, r * UNIT_SIZE + UNIT_SIZE/2);
                         scene.add(pLight);
 
-                        lightsList.push({ light: pLight, baseIntensity: 0.8, mesh: ceilLightMesh });
+                        lightsList.push({ light: pLight, baseIntensity: 1.2, mesh: ceilLightMesh });
                     }
                 }
             }
+
+            // --- SPAWN EXIT DOOR (クリア地点) ---
+            exitDoor = createExitDoorMesh();
+            exitDoor.position.set(12 * UNIT_SIZE + 2, 0, 11 * UNIT_SIZE + 2);
+            scene.add(exitDoor);
 
             // --- SPAWN ENTITIES ---
             // 1. Howler
@@ -658,6 +680,14 @@
             camera.rotation.order = "YXZ";
             camera.rotation.y = yaw;
             camera.rotation.x = pitch;
+
+            // --- クリア判定 (EXITの扉に近づいたか) ---
+            if (exitDoor) {
+                const distToExit = Math.hypot(camera.position.x - exitDoor.position.x, camera.position.z - exitDoor.position.z);
+                if (distToExit < 1.8) {
+                    gameClear();
+                }
+            }
         }
 
         function updateEntities() {
@@ -686,11 +716,11 @@
             }
         }
 
-        // 蛍光灯のちらつき効果（Flickering Effect）
+        // 蛍光灯のちらつき効果
         function updateFluorescentLights() {
             lightsList.forEach(item => {
-                if (Math.random() < 0.03) { // 確率でちらつく
-                    item.light.intensity = Math.random() < 0.5 ? 0.1 : item.baseIntensity;
+                if (Math.random() < 0.03) {
+                    item.light.intensity = Math.random() < 0.5 ? 0.2 : item.baseIntensity;
                 } else {
                     item.light.intensity = item.baseIntensity;
                 }
@@ -721,6 +751,23 @@
             camera.position.set(1.5 * UNIT_SIZE, 1.6, 1.5 * UNIT_SIZE);
             entities[0].mesh.position.set(11.5 * UNIT_SIZE, 0, 11.5 * UNIT_SIZE); // Howler
             entities[1].mesh.position.set(1.5 * UNIT_SIZE, 0, 11.5 * UNIT_SIZE);  // Smiler
+            yaw = 0; pitch = 0;
+        }
+
+        function gameClear() {
+            isPlaying = false;
+            if (document.exitPointerLock) document.exitPointerLock();
+
+            titleText.innerText = "STAGE CLEARED!";
+            titleText.style.color = "#55ff55";
+            descText.innerHTML = "無事に「EXIT」の扉へ到達した！<br>バックルームからの脱出に成功した！";
+            startBtn.innerText = "もう一度遊ぶ";
+            screenOverlay.style.display = 'flex';
+
+            // Reset Positions
+            camera.position.set(1.5 * UNIT_SIZE, 1.6, 1.5 * UNIT_SIZE);
+            entities[0].mesh.position.set(11.5 * UNIT_SIZE, 0, 11.5 * UNIT_SIZE);
+            entities[1].mesh.position.set(1.5 * UNIT_SIZE, 0, 11.5 * UNIT_SIZE);
             yaw = 0; pitch = 0;
         }
 
