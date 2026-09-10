@@ -3,642 +3,529 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>The Backrooms - Level 0</title>
+    <title>The Backrooms 3D</title>
     <style>
-        * {
-            box-sizing: border-box;
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Courier New', Courier, monospace;
             user-select: none;
             -webkit-user-select: none;
         }
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: #000;
-            font-family: monospace;
-        }
+
         #canvas-container {
-            width: 100%;
-            height: 100%;
-            position: relative;
+            width: 100vw;
+            height: 100vh;
         }
-        
-        /* VHS/カメラ風ノイズフィルター（バックルーム感の強化） */
-        #vhs-overlay {
+
+        /* UI Overlay */
+        #ui {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             pointer-events: none;
-            z-index: 5;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-            background-size: 100% 4px, 6px 100%;
-            opacity: 0.8;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
-        /* UI Overlay */
-        #ui {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            color: #d1c87a;
+        .hud-text {
+            color: #ffff88;
             font-size: 18px;
             text-shadow: 2px 2px 4px #000;
-            pointer-events: none;
-            z-index: 10;
         }
+
         #crosshair {
             position: absolute;
             top: 50%;
             left: 50%;
             width: 8px;
             height: 8px;
-            background: rgba(255, 255, 255, 0.4);
+            background-color: rgba(255, 255, 255, 0.4);
             border-radius: 50%;
             transform: translate(-50%, -50%);
-            pointer-events: none;
-            z-index: 10;
         }
-        #click-to-play {
+
+        /* Screen Overlay effects */
+        #vignette {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.85);
+            top: 0; left: 0; width: 100%; height: 100%;
+            box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.8);
+            pointer-events: none;
+        }
+
+        /* Start / Game Over Screens */
+        #screen-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            color: #e0d068;
-            font-size: 24px;
-            z-index: 20;
-            cursor: pointer;
-            text-align: center;
-            padding: 20px;
-        }
-        #click-to-play h1 {
-            margin-bottom: 10px;
-            color: #f3e689;
-            letter-spacing: 4px;
-        }
-        #click-to-play p {
-            font-size: 16px;
-            color: #aaa;
-            max-width: 500px;
-            line-height: 1.6;
+            color: #d1cc84;
+            pointer-events: auto;
+            z-index: 10;
         }
 
-        /* モバイル用コントローラー */
-        #mobile-controls {
-            display: none;
+        h1 {
+            font-size: 42px;
+            margin-bottom: 10px;
+            letter-spacing: 5px;
+            color: #e6df75;
+            text-shadow: 0 0 10px rgba(230, 223, 117, 0.5);
+        }
+
+        p {
+            font-size: 16px;
+            margin-bottom: 30px;
+            text-align: center;
+            line-height: 1.6;
+            max-width: 80%;
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 20px;
+            font-family: inherit;
+            background-color: #33321d;
+            color: #e6df75;
+            border: 2px solid #e6df75;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background-color: #e6df75;
+            color: #000;
+        }
+
+        /* Mobile Controls */
+        #touch-controls {
             position: absolute;
-            bottom: 30px;
+            bottom: 20px;
             left: 0;
             width: 100%;
             height: 150px;
-            pointer-events: none;
-            z-index: 15;
+            display: none;
+            pointer-events: auto;
+            z-index: 5;
         }
-        .touch-zone {
+
+        #joystick-zone {
             position: absolute;
-            bottom: 10px;
+            bottom: 20px;
+            left: 20px;
             width: 120px;
             height: 120px;
             background: rgba(255, 255, 255, 0.1);
             border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            pointer-events: auto;
+            border-radius: 60px;
             touch-action: none;
         }
-        #joystick-left { left: 30px; }
-        #joystick-right { right: 30px; }
-        .stick {
+
+        #joystick-knob {
             position: absolute;
             top: 35px;
             left: 35px;
             width: 50px;
             height: 50px;
-            background: rgba(230, 210, 100, 0.5);
-            border-radius: 50%;
-            pointer-events: none;
+            background: rgba(230, 223, 117, 0.5);
+            border-radius: 25px;
         }
 
-        /* ゲームオーバー画面 */
-        #game-over {
-            display: none;
+        #look-zone {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
+            bottom: 0;
+            right: 0;
+            width: 50%;
             height: 100%;
-            background: #000;
-            color: #ff3333;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 30;
-            font-size: 32px;
-        }
-        #game-over button {
-            margin-top: 20px;
-            padding: 10px 20px;
-            background: #333;
-            color: #fff;
-            border: 1px solid #ff3333;
-            font-family: monospace;
-            font-size: 18px;
-            cursor: pointer;
+            touch-action: none;
         }
     </style>
-    <!-- Three.js (3Dライブラリ) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
-
     <div id="canvas-container"></div>
-    <div id="vhs-overlay"></div>
-    
-    <div id="ui">
-        <div>LOCATION: LEVEL 0</div>
-        <div id="status">STATUS: Exploration...</div>
-    </div>
-    
+    <div id="vignette"></div>
     <div id="crosshair"></div>
 
-    <div id="click-to-play">
-        <h1>THE BACKROOMS</h1>
-        <p>黄色の壁紙、湿ったカーペット、蛍光灯のノイズ...<br>ここから抜け出す出口を探してください。</p>
-        <p style="margin-top:20px; color:#fff;">【画面をクリックしてスタート】</p>
-        <p style="font-size:12px; color:#888;">PC: WASDまたは矢印キーで移動 / マウスで視点移動<br>スマホ: 画面下の左右操作エリアを使用</p>
+    <div id="ui">
+        <div class="hud-text">LEVEL 0 - THE TUTORIAL MAIN ROOM</div>
+        <div class="hud-text" id="status-text">逃げ道を探せ...</div>
     </div>
 
-    <div id="game-over">
-        <div>YOU WERE CAUGHT</div>
-        <button onclick="location.reload()">RETRY</button>
+    <!-- Start & Game Over Screen -->
+    <div id="screen-overlay">
+        <h1 id="title-text">THE BACKROOMS</h1>
+        <p id="desc-text">黄色い壁紙と蛍光灯のノイズが満ちる無限の空間に落ちてしまった。<br>徘徊する「何か」に見つからないよう注意しろ。<br><br>[操作] PC: WASDキー移動 / マウスで視点移動<br>スマホ: 画面左で移動 / 画面右で視点移動</p>
+        <button id="start-btn">探索を開始する</button>
     </div>
 
-    <!-- モバイル操作用UI -->
-    <div id="mobile-controls">
-        <div id="joystick-left" class="touch-zone"><div class="stick"></div></div>
-        <div id="joystick-right" class="touch-zone"><div class="stick"></div></div>
+    <!-- Mobile Touch Controls -->
+    <div id="touch-controls">
+        <div id="joystick-zone"><div id="joystick-knob"></div></div>
+        <div id="look-zone"></div>
     </div>
+
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script>
-        // --- 基本設定 ---
-        const mapSize = 15; // 15x15の迷路
-        const tileSize = 6;
-        let scene, camera, renderer;
-        let walls = [];
-        let monster, monsterLight;
-        let exitMesh;
-        let isGameActive = false;
+        // --- 1. MAP DATA (1 = Wall, 0 = Empty) ---
+        const MAP_SIZE = 16;
+        const map = [
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,1],
+            [1,0,1,0,1,0,1,1,1,0,1,0,1,1,0,1],
+            [1,0,1,0,0,0,0,0,1,0,0,0,1,0,0,1],
+            [1,0,1,1,1,1,0,1,1,1,1,0,1,0,1,1],
+            [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
+            [1,1,1,0,1,1,1,1,0,1,1,1,0,1,0,1],
+            [1,0,0,0,0,0,0,1,0,0,0,0,0,1,0,1],
+            [1,0,1,1,1,0,1,1,1,1,0,1,1,1,0,1],
+            [1,0,0,0,1,0,0,0,0,1,0,0,0,1,0,1],
+            [1,1,1,0,1,1,0,1,0,1,1,1,0,1,0,1],
+            [1,0,0,0,0,1,0,1,0,0,0,1,0,0,0,1],
+            [1,0,1,1,0,1,0,1,1,1,0,1,1,1,0,1],
+            [1,0,0,1,0,0,0,0,0,1,0,0,0,1,0,1],
+            [1,1,0,0,0,1,1,1,0,0,0,1,0,0,0,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+        ];
 
-        // プレイヤー状態
+        const UNIT_SIZE = 4;
+
+        // --- 2. GAME STATE & SETUP ---
+        let scene, camera, renderer;
+        let isPlaying = false;
         let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
         let yaw = 0, pitch = 0;
-        const playerRadius = 0.5; // 移動しやすくするためにヒットボックスを調整
+        const player = { x: 6, z: 6, radius: 0.8, speed: 0.08 };
 
-        // モバイル操作用データ
-        const isMobile = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-        let moveTouchId = null, lookTouchId = null;
-        let moveStart = {x:0, y:0}, lookStart = {x:0, y:0};
-        let moveVector = {x:0, y:0}, lookVector = {x:0, y:0};
+        // Entity (Monster) Data
+        const entity = {
+            mesh: null,
+            x: 14 * UNIT_SIZE,
+            z: 14 * UNIT_SIZE,
+            speed: 0.045
+        };
 
-        // --- 強化版Proceduralテクスチャ生成（よりバックルームらしい質感） ---
+        const screenOverlay = document.getElementById('screen-overlay');
+        const startBtn = document.getElementById('start-btn');
+        const titleText = document.getElementById('title-text');
+        const descText = document.getElementById('desc-text');
+        const touchControls = document.getElementById('touch-controls');
+
+        // Check Device
+        const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+        // --- 3. TEXTURE GENERATION (Procedural Canvas Textures) ---
         function createYellowWallTexture() {
             const canvas = document.createElement('canvas');
-            canvas.width = 512; canvas.height = 512;
+            canvas.width = 256; canvas.height = 256;
             const ctx = canvas.getContext('2d');
-            
-            // 特有の湿った黄色ベース
-            ctx.fillStyle = '#baa343';
-            ctx.fillRect(0, 0, 512, 512);
-
-            // 縦縞壁紙パターン
-            ctx.fillStyle = 'rgba(140, 120, 30, 0.15)';
-            for(let i = 0; i < 512; i += 16) {
-                ctx.fillRect(i, 0, 8, 512);
-            }
-
-            // ノイズ・汚れ
-            for(let i = 0; i < 8000; i++) {
-                ctx.fillStyle = Math.random() > 0.5 ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.04)';
-                ctx.fillRect(Math.random()*512, Math.random()*512, 2, 2);
-            }
-
-            // 不気味な水漏れ・カビの染み（Backrooms特有の質感）
-            for(let i = 0; i < 12; i++) {
-                ctx.fillStyle = 'rgba(40, 35, 10, 0.15)';
+            ctx.fillStyle = '#c8bc59';
+            ctx.fillRect(0, 0, 256, 256);
+            // Add Mono-pattern noise/lines
+            ctx.strokeStyle = '#a69b42';
+            ctx.lineWidth = 2;
+            for(let i = 0; i < 256; i += 16) {
                 ctx.beginPath();
-                ctx.arc(Math.random()*512, Math.random()*512, 20 + Math.random()*40, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.moveTo(i, 0); ctx.lineTo(i, 256);
+                ctx.stroke();
             }
-
+            // Noise
+            for (let i = 0; i < 3000; i++) {
+                ctx.fillStyle = Math.random() > 0.5 ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)';
+                ctx.fillRect(Math.random()*256, Math.random()*256, 2, 2);
+            }
             return new THREE.CanvasTexture(canvas);
         }
 
         function createCarpetTexture() {
             const canvas = document.createElement('canvas');
-            canvas.width = 512; canvas.height = 512;
+            canvas.width = 128; canvas.height = 128;
             const ctx = canvas.getContext('2d');
-            
-            // 湿った湿気のあるカーペット色
-            ctx.fillStyle = '#4a442d';
-            ctx.fillRect(0, 0, 512, 512);
-
-            // ノイズ
-            for(let i = 0; i < 15000; i++) {
-                ctx.fillStyle = Math.random() > 0.5 ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.05)';
-                ctx.fillRect(Math.random()*512, Math.random()*512, 2, 2);
+            ctx.fillStyle = '#615833';
+            ctx.fillRect(0, 0, 128, 128);
+            for (let i = 0; i < 2000; i++) {
+                ctx.fillStyle = Math.random() > 0.5 ? '#4a4325' : '#786e42';
+                ctx.fillRect(Math.random()*128, Math.random()*128, 2, 2);
             }
-
-            // カーペットのグリッド線
-            ctx.strokeStyle = 'rgba(0,0,0,0.15)';
-            ctx.lineWidth = 2;
-            for(let i = 0; i < 512; i += 32) {
-                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 512); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(512, i); ctx.stroke();
-            }
-
-            return new THREE.CanvasTexture(canvas);
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set(MAP_SIZE, MAP_SIZE);
+            return texture;
         }
 
-        // --- 迷路マップ生成（1: 壁, 0: 通路, 2: 出口） ---
-        const map = [
-            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,0,0,0,1,0,0,0,0,0,1,0,0,0,1],
-            [1,0,1,0,1,0,1,1,1,0,1,0,1,0,1],
-            [1,0,1,0,0,0,0,0,1,0,0,0,1,0,1],
-            [1,0,1,1,1,1,1,0,1,1,1,1,1,0,1],
-            [1,0,0,0,0,0,1,0,0,0,0,0,0,0,1],
-            [1,1,1,1,1,0,1,1,1,0,1,1,1,0,1],
-            [1,0,0,0,1,0,0,0,1,0,1,0,0,0,1],
-            [1,0,1,0,1,1,1,0,1,0,1,0,1,1,1],
-            [1,0,1,0,0,0,1,0,0,0,1,0,0,0,1],
-            [1,0,1,1,1,0,1,1,1,1,1,1,1,0,1],
-            [1,0,0,0,1,0,0,0,0,0,0,0,1,0,1],
-            [1,1,1,0,1,1,1,1,1,0,1,0,1,0,1],
-            [1,0,0,0,0,0,0,0,0,0,1,0,0,2,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-        ];
-
-        // --- 初期化 ---
-        function init() {
-            const container = document.getElementById('canvas-container');
-
-            // シーン
+        // --- 4. THREE.JS SCENE CREATION ---
+        function initScene() {
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0d0d08);
-            scene.fog = new THREE.FogExp2(0x1a1910, 0.035); // 不気味な濃い霧
+            scene.background = new THREE.Color(0x0a0a05);
+            scene.fog = new THREE.FogExp2(0x1a190e, 0.08);
 
-            // カメラ
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            // スタート位置を通路の真ん中に確実に配置
-            camera.position.set(tileSize * 1.5, 2, tileSize * 1.5);
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.y = 1.6; // Eye level
 
-            // レンダラー
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            renderer.shadowMap.enabled = true;
-            container.appendChild(renderer.domElement);
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-            // テクスチャ準備
+            // Ambient Light
+            const ambientLight = new THREE.AmbientLight(0x666244, 0.8);
+            scene.add(ambientLight);
+
+            // Materials
             const wallTexture = createYellowWallTexture();
             wallTexture.wrapS = THREE.RepeatWrapping;
             wallTexture.wrapT = THREE.RepeatWrapping;
-            wallTexture.repeat.set(1, 1);
 
-            const carpetTexture = createCarpetTexture();
-            carpetTexture.wrapS = THREE.RepeatWrapping;
-            carpetTexture.wrapT = THREE.RepeatWrapping;
-            carpetTexture.repeat.set(15, 15);
-
-            // マテリアル
             const wallMaterial = new THREE.MeshLambertMaterial({ map: wallTexture });
-            const floorMaterial = new THREE.MeshLambertMaterial({ map: carpetTexture });
-            const ceilingMaterial = new THREE.MeshLambertMaterial({ color: 0xcccccc });
+            const floorMaterial = new THREE.MeshLambertMaterial({ map: createCarpetTexture() });
+            const ceilingMaterial = new THREE.MeshLambertMaterial({ color: 0xd4ce96 });
 
-            // マップ構築
-            const wallGeometry = new THREE.BoxGeometry(tileSize, 4, tileSize);
-            
-            for(let r = 0; r < mapSize; r++) {
-                for(let c = 0; c < mapSize; c++) {
-                    const x = c * tileSize;
-                    const z = r * tileSize;
-
-                    if(map[r][c] === 1) {
-                        const wall = new THREE.Mesh(wallGeometry, wallMaterial);
-                        wall.position.set(x, 2, z);
-                        scene.add(wall);
-                        walls.push(wall);
-                    } else if(map[r][c] === 2) {
-                        // 出口
-                        const exitGeo = new THREE.BoxGeometry(tileSize * 0.8, 3.8, tileSize * 0.8);
-                        const exitMat = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
-                        exitMesh = new THREE.Mesh(exitGeo, exitMat);
-                        exitMesh.position.set(x, 1.9, z);
-                        scene.add(exitMesh);
-
-                        const exitLight = new THREE.PointLight(0xff0000, 2, 10);
-                        exitLight.position.set(x, 2, z);
-                        scene.add(exitLight);
-                    }
-                }
-            }
-
-            // 床 & 天井
-            const floorGeo = new THREE.PlaneGeometry(mapSize * tileSize, mapSize * tileSize);
+            // Floor & Ceiling
+            const mapTotalSize = MAP_SIZE * UNIT_SIZE;
+            const floorGeo = new THREE.PlaneGeometry(mapTotalSize, mapTotalSize);
             const floor = new THREE.Mesh(floorGeo, floorMaterial);
             floor.rotation.x = -Math.PI / 2;
-            floor.position.set((mapSize * tileSize)/2 - tileSize/2, 0, (mapSize * tileSize)/2 - tileSize/2);
+            floor.position.set(mapTotalSize/2, 0, mapTotalSize/2);
             scene.add(floor);
 
             const ceiling = new THREE.Mesh(floorGeo, ceilingMaterial);
             ceiling.rotation.x = Math.PI / 2;
-            ceiling.position.set((mapSize * tileSize)/2 - tileSize/2, 4, (mapSize * tileSize)/2 - tileSize/2);
+            ceiling.position.set(mapTotalSize/2, 3, mapTotalSize/2);
             scene.add(ceiling);
 
-            // 不気味な特有の黄色環境光
-            const ambientLight = new THREE.AmbientLight(0xc2b86b, 0.7);
-            scene.add(ambientLight);
-
-            // プレイヤーの周囲光
-            const playerLight = new THREE.PointLight(0xfffee0, 1.0, 12);
-            camera.add(playerLight);
-            scene.add(camera);
-
-            // モンスター生成
-            createMonster();
-
-            // イベント登録
-            window.addEventListener('resize', onWindowResize);
-            setupControls();
-
-            if (isMobile) {
-                document.getElementById('mobile-controls').style.display = 'block';
-                setupMobileControls();
+            // Build Walls & Lights
+            const wallGeo = new THREE.BoxGeometry(UNIT_SIZE, 3, UNIT_SIZE);
+            
+            for (let r = 0; r < MAP_SIZE; r++) {
+                for (let c = 0; c < MAP_SIZE; c++) {
+                    if (map[r][c] === 1) {
+                        const wall = new THREE.Mesh(wallGeo, wallMaterial);
+                        wall.position.set(c * UNIT_SIZE + UNIT_SIZE/2, 1.5, r * UNIT_SIZE + UNIT_SIZE/2);
+                        scene.add(wall);
+                    } else if (Math.random() < 0.2) {
+                        // Ceil Lights
+                        const light = new THREE.PointLight(0xfff5ab, 0.6, 8);
+                        light.position.set(c * UNIT_SIZE + UNIT_SIZE/2, 2.8, r * UNIT_SIZE + UNIT_SIZE/2);
+                        scene.add(light);
+                    }
+                }
             }
 
-            animate();
+            // Create Entity (Wireframe Spooky Shadow)
+            const entityGeo = new THREE.CipherGeometry ? new THREE.CipherGeometry() : new THREE.ConeGeometry(0.6, 2.2, 8);
+            const entityMat = new THREE.MeshBasicMaterial({ color: 0x050505, wireframe: true });
+            entity.mesh = new THREE.Mesh(entityGeo, entityMat);
+            entity.mesh.position.set(entity.x, 1.1, entity.z);
+            scene.add(entity.mesh);
+
+            // Set initial camera position
+            camera.position.set(player.x * UNIT_SIZE, 1.6, player.z * UNIT_SIZE);
         }
 
-        // --- エンティティ（敵）の生成 ---
-        function createMonster() {
-            const group = new THREE.Group();
-            
-            const mat = new THREE.MeshBasicMaterial({ color: 0x050505 });
-            const bodyGeo = new THREE.CylinderGeometry(0.3, 0.1, 3, 8);
-            const body = new THREE.Mesh(bodyGeo, mat);
-            body.position.y = 1.5;
-            group.add(body);
-
-            const headGeo = new THREE.SphereGeometry(0.4, 8, 8);
-            const head = new THREE.Mesh(headGeo, mat);
-            head.position.y = 3.2;
-            group.add(head);
-
-            const eyeMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-            const eyeGeo = new THREE.SphereGeometry(0.08, 6, 6);
-            const eye1 = new THREE.Mesh(eyeGeo, eyeMat);
-            eye1.position.set(0.15, 3.3, 0.35);
-            const eye2 = new THREE.Mesh(eyeGeo, eyeMat);
-            eye2.position.set(-0.15, 3.3, 0.35);
-            group.add(eye1);
-            group.add(eye2);
-
-            monsterLight = new THREE.PointLight(0xff0000, 1, 8);
-            monsterLight.position.y = 2;
-            group.add(monsterLight);
-
-            group.position.set(tileSize * 11.5, 0, tileSize * 11.5);
-            scene.add(group);
-            monster = group;
-        }
-
-        // --- PC用操作（確実に入力を受け付ける設計） ---
+        // --- 5. CONTROLS & INPUTS ---
         function setupControls() {
-            const startScreen = document.getElementById('click-to-play');
-
-            startScreen.addEventListener('click', () => {
-                startScreen.style.display = 'none';
-                isGameActive = true;
-                if (!isMobile) {
-                    document.body.requestPointerLock();
-                }
-            });
-
-            document.addEventListener('pointerlockchange', () => {
-                if (document.pointerLockElement !== document.body && !isMobile && isGameActive) {
-                    startScreen.style.display = 'flex';
-                    isGameActive = false;
-                }
-            });
-
-            document.addEventListener('mousemove', (e) => {
-                if (!isGameActive || isMobile) return;
-                yaw -= e.movementX * 0.0025;
-                pitch -= e.movementY * 0.0025;
-                pitch = Math.max(-Math.PI/2.2, Math.min(Math.PI/2.2, pitch));
-            });
-
-            // WASD ＋ 矢印キーに対応
+            // Keyboard Controls
             window.addEventListener('keydown', (e) => {
-                if(e.code === 'KeyW' || e.code === 'ArrowUp') moveForward = true;
-                if(e.code === 'KeyS' || e.code === 'ArrowDown') moveBackward = true;
-                if(e.code === 'KeyA' || e.code === 'ArrowLeft') moveLeft = true;
-                if(e.code === 'KeyD' || e.code === 'ArrowRight') moveRight = true;
+                if (!isPlaying) return;
+                if (e.code === 'KeyW' || e.code === 'ArrowUp') moveForward = true;
+                if (e.code === 'KeyS' || e.code === 'ArrowDown') moveBackward = true;
+                if (e.code === 'KeyA' || e.code === 'ArrowLeft') moveLeft = true;
+                if (e.code === 'KeyD' || e.code === 'ArrowRight') moveRight = true;
             });
 
             window.addEventListener('keyup', (e) => {
-                if(e.code === 'KeyW' || e.code === 'ArrowUp') moveForward = false;
-                if(e.code === 'KeyS' || e.code === 'ArrowDown') moveBackward = false;
-                if(e.code === 'KeyA' || e.code === 'ArrowLeft') moveLeft = false;
-                if(e.code === 'KeyD' || e.code === 'ArrowRight') moveRight = false;
+                if (e.code === 'KeyW' || e.code === 'ArrowUp') moveForward = false;
+                if (e.code === 'KeyS' || e.code === 'ArrowDown') moveBackward = false;
+                if (e.code === 'KeyA' || e.code === 'ArrowLeft') moveLeft = false;
+                if (e.code === 'KeyD' || e.code === 'ArrowRight') moveRight = false;
             });
+
+            // Mouse Look (Pointer Lock)
+            document.addEventListener('mousemove', (e) => {
+                if (!isPlaying || (document.pointerLockElement !== document.body && !isMobile)) return;
+                yaw -= e.movementX * 0.002;
+                pitch -= e.movementY * 0.002;
+                pitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, pitch));
+            });
+
+            // Mobile Controls Setup
+            if (isMobile) {
+                touchControls.style.display = 'block';
+                setupTouchControls();
+            }
+
+            window.addEventListener('resize', onWindowResize);
         }
 
-        // --- スマホ用タッチ操作 ---
-        function setupMobileControls() {
-            const joyLeft = document.getElementById('joystick-left');
-            const joyRight = document.getElementById('joystick-right');
-            const stickLeft = joyLeft.querySelector('.stick');
+        function setupTouchControls() {
+            const joystickZone = document.getElementById('joystick-zone');
+            const joystickKnob = document.getElementById('joystick-knob');
+            const lookZone = document.getElementById('look-zone');
 
-            joyLeft.addEventListener('touchstart', (e) => {
-                const touch = e.changedTouches[0];
-                moveTouchId = touch.identifier;
-                moveStart = { x: touch.clientX, y: touch.clientY };
-            });
+            let moveTouchId = null;
+            let lookTouchId = null;
+            let touchStartX = 0, touchStartY = 0;
+            let lastLookX = 0, lastLookY = 0;
 
-            joyRight.addEventListener('touchstart', (e) => {
-                const touch = e.changedTouches[0];
-                lookTouchId = touch.identifier;
-                lookStart = { x: touch.clientX, y: touch.clientY };
+            joystickZone.addEventListener('touchstart', (e) => {
+                for (let touch of e.changedTouches) {
+                    if (moveTouchId === null) {
+                        moveTouchId = touch.identifier;
+                        touchStartX = touch.clientX;
+                        touchStartY = touch.clientY;
+                    }
+                }
             });
 
             window.addEventListener('touchmove', (e) => {
-                for (let i = 0; i < e.changedTouches.length; i++) {
-                    const touch = e.changedTouches[i];
-                    
+                for (let touch of e.changedTouches) {
                     if (touch.identifier === moveTouchId) {
-                        const dx = touch.clientX - moveStart.x;
-                        const dy = touch.clientY - moveStart.y;
-                        const dist = Math.min(Math.hypot(dx, dy), 40);
-                        const angle = Math.atan2(dy, dx);
+                        let dx = touch.clientX - touchStartX;
+                        let dy = touch.clientY - touchStartY;
+                        let dist = Math.min(Math.hypot(dx, dy), 40);
+                        let angle = Math.atan2(dy, dx);
                         
-                        stickLeft.style.transform = `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px)`;
-                        moveVector = { x: (Math.cos(angle)*dist)/40, y: (Math.sin(angle)*dist)/40 };
-                    }
+                        joystickKnob.style.transform = `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px)`;
 
+                        moveForward = dy < -10;
+                        moveBackward = dy > 10;
+                        moveLeft = dx < -10;
+                        moveRight = dx > 10;
+                    }
                     if (touch.identifier === lookTouchId) {
-                        const dx = touch.clientX - lookStart.x;
-                        const dy = touch.clientY - lookStart.y;
-                        
+                        let dx = touch.clientX - lastLookX;
+                        let dy = touch.clientY - lastLookY;
                         yaw -= dx * 0.005;
                         pitch -= dy * 0.005;
-                        pitch = Math.max(-Math.PI/2.2, Math.min(Math.PI/2.2, pitch));
-
-                        lookStart = { x: touch.clientX, y: touch.clientY };
+                        pitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, pitch));
+                        lastLookX = touch.clientX;
+                        lastLookY = touch.clientY;
                     }
                 }
-            }, { passive: false });
+            });
 
-            const resetTouch = (e) => {
-                for (let i = 0; i < e.changedTouches.length; i++) {
-                    const touch = e.changedTouches[i];
+            window.addEventListener('touchend', (e) => {
+                for (let touch of e.changedTouches) {
                     if (touch.identifier === moveTouchId) {
                         moveTouchId = null;
-                        moveVector = { x: 0, y: 0 };
-                        stickLeft.style.transform = `translate(0px, 0px)`;
+                        joystickKnob.style.transform = `translate(0px, 0px)`;
+                        moveForward = moveBackward = moveLeft = moveRight = false;
                     }
                     if (touch.identifier === lookTouchId) {
                         lookTouchId = null;
                     }
                 }
-            };
+            });
 
-            window.addEventListener('touchend', resetTouch);
-            window.addEventListener('touchcancel', resetTouch);
+            lookZone.addEventListener('touchstart', (e) => {
+                for (let touch of e.changedTouches) {
+                    if (lookTouchId === null) {
+                        lookTouchId = touch.identifier;
+                        lastLookX = touch.clientX;
+                        lastLookY = touch.clientY;
+                    }
+                }
+            });
         }
 
-        // --- 修正版：絶対にスタック（スタック・動けない状態）しない移動ロジック ---
-        function updatePlayer(delta) {
-            const speed = 4.5 * delta;
-            let inputX = 0, inputZ = 0;
-
-            if (!isMobile) {
-                if (moveForward) inputZ -= 1;
-                if (moveBackward) inputZ += 1;
-                if (moveLeft) inputX -= 1;
-                if (moveRight) inputX += 1;
-                
-                const len = Math.hypot(inputX, inputZ);
-                if (len > 0) { inputX /= len; inputZ /= len; }
-            } else {
-                inputX = moveVector.x;
-                inputZ = moveVector.y;
-            }
-
-            // カメラ方向のベクトル計算
-            const sinYaw = Math.sin(yaw);
-            const cosYaw = Math.cos(yaw);
+        // --- 6. LOGIC & COLLISION ---
+        function checkCollision(nx, nz) {
+            const gridX = Math.floor(nx / UNIT_SIZE);
+            const gridZ = Math.floor(nz / UNIT_SIZE);
             
-            const moveX = (inputX * cosYaw - inputZ * sinYaw) * speed;
-            const moveZ = (inputX * sinYaw + inputZ * cosYaw) * speed;
+            if (gridX < 0 || gridX >= MAP_SIZE || gridZ < 0 || gridZ >= MAP_SIZE) return true;
+            return map[gridZ][gridX] === 1;
+        }
 
-            // X軸独立移動（引っかかり防止）
-            if (moveX !== 0) {
-                const nextX = camera.position.x + moveX;
-                if (!checkWallCollision(nextX, camera.position.z)) {
-                    camera.position.x = nextX;
+        function updatePlayer() {
+            // Direction vectors
+            const dirX = Math.sin(yaw);
+            const dirZ = Math.cos(yaw);
+
+            let moveX = 0;
+            let moveZ = 0;
+
+            if (moveForward)  { moveX -= dirX; moveZ -= dirZ; }
+            if (moveBackward) { moveX += dirX; moveZ += dirZ; }
+            if (moveLeft)     { moveX -= dirZ; moveZ += dirX; }
+            if (moveRight)    { moveX += dirZ; moveZ -= dirX; }
+
+            // Normalize
+            const len = Math.hypot(moveX, moveZ);
+            if (len > 0) {
+                moveX = (moveX / len) * player.speed;
+                moveZ = (moveZ / len) * player.speed;
+
+                // Move with collision checking
+                if (!checkCollision(camera.position.x + moveX * 2, camera.position.z)) {
+                    camera.position.x += moveX;
+                }
+                if (!checkCollision(camera.position.x, camera.position.z + moveZ * 2)) {
+                    camera.position.z += moveZ;
                 }
             }
 
-            // Z軸独立移動（引っかかり防止）
-            if (moveZ !== 0) {
-                const nextZ = camera.position.z + moveZ;
-                if (!checkWallCollision(camera.position.x, nextZ)) {
-                    camera.position.z = nextZ;
-                }
+            // Head bobbing
+            if (len > 0) {
+                camera.position.y = 1.6 + Math.sin(Date.now() * 0.008) * 0.05;
             }
 
-            // カメラ角度更新
-            const euler = new THREE.Euler(0, 0, 0, 'YXZ');
-            euler.x = pitch;
-            euler.y = yaw;
-            camera.quaternion.setFromEuler(euler);
+            // Rotation
+            camera.rotation.order = "YXZ";
+            camera.rotation.y = yaw;
+            camera.rotation.x = pitch;
+        }
 
-            // 歩行の視点揺れ（移動中のみ）
-            if (inputX !== 0 || inputZ !== 0) {
-                camera.position.y = 2 + Math.sin(Date.now() * 0.009) * 0.06;
-            } else {
-                camera.position.y = 2;
+        function updateEntity() {
+            // Chase logic
+            const dx = camera.position.x - entity.mesh.position.x;
+            const dz = camera.position.z - entity.mesh.position.z;
+            const dist = Math.hypot(dx, dz);
+
+            if (dist < 15) { // Active distance
+                entity.mesh.position.x += (dx / dist) * entity.speed;
+                entity.mesh.position.z += (dz / dist) * entity.speed;
+                entity.mesh.rotation.y = Math.atan2(dx, dz);
+            }
+
+            // Game Over Check
+            if (dist < 1.2) {
+                gameOver();
             }
         }
 
-        // 確実な判定計算
-        function checkWallCollision(x, z) {
-            const halfTile = tileSize / 2;
-            for (let wall of walls) {
-                const wx = wall.position.x;
-                const wz = wall.position.z;
-
-                // 簡易バウンディングボックスチェック
-                if (x + playerRadius > wx - halfTile &&
-                    x - playerRadius < wx + halfTile &&
-                    z + playerRadius > wz - halfTile &&
-                    z - playerRadius < wz + halfTile) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        // --- モンスターのAI追跡 ---
-        function updateMonster(delta) {
-            if (!monster) return;
-
-            const dist = monster.position.distanceTo(camera.position);
-
-            if (dist < 25) {
-                document.getElementById('status').innerText = "STATUS: RUN!";
-                document.getElementById('status').style.color = "#ff3333";
-
-                const dir = new THREE.Vector3().subVectors(camera.position, monster.position);
-                dir.y = 0;
-                dir.normalize();
-
-                monster.position.add(dir.multiplyScalar(2.6 * delta));
-                monster.lookAt(camera.position.x, monster.position.y, camera.position.z);
-
-                if (dist < 1.5) {
-                    gameOver();
-                }
-            } else {
-                document.getElementById('status').innerText = "STATUS: Exploration...";
-                document.getElementById('status').style.color = "#d1c87a";
-            }
-        }
-
-        // --- 勝敗判定 ---
-        function checkExit() {
-            if (!exitMesh) return;
-            const dist = camera.position.distanceTo(exitMesh.position);
-            if (dist < 2.0) {
-                isGameActive = false;
-                alert("脱出成功！あなたはThe Backroomsから現実世界に戻ることができました。");
-                location.reload();
+        // --- 7. GAME STATE MANAGEMENT ---
+        function startGame() {
+            screenOverlay.style.display = 'none';
+            isPlaying = true;
+            if (!isMobile) {
+                document.body.requestPointerLock();
             }
         }
 
         function gameOver() {
-            isGameActive = false;
-            document.exitPointerLock();
-            document.getElementById('game-over').style.display = 'flex';
+            isPlaying = false;
+            if (document.exitPointerLock) document.exitPointerLock();
+            titleText.innerText = "YOU DIED";
+            titleText.style.color = "#ff3333";
+            descText.innerHTML = "「何か」に捕まってしまった...<br>バックルームの虚無へと消えていく。";
+            startBtn.innerText = "もう一度やり直す";
+            screenOverlay.style.display = 'flex';
+
+            // Reset Position
+            camera.position.set(player.x * UNIT_SIZE, 1.6, player.z * UNIT_SIZE);
+            entity.mesh.position.set(14 * UNIT_SIZE, 1.1, 14 * UNIT_SIZE);
         }
 
         function onWindowResize() {
@@ -647,25 +534,23 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
-        // --- メインループ ---
-        let lastTime = performance.now();
+        // --- 8. GAME LOOP ---
         function animate() {
             requestAnimationFrame(animate);
 
-            const now = performance.now();
-            const delta = Math.min((now - lastTime) / 1000, 0.1);
-            lastTime = now;
-
-            if (isGameActive) {
-                updatePlayer(delta);
-                updateMonster(delta);
-                checkExit();
+            if (isPlaying) {
+                updatePlayer();
+                updateEntity();
             }
 
             renderer.render(scene, camera);
         }
 
-        window.onload = init;
+        // Start Setup
+        startBtn.addEventListener('click', startGame);
+        initScene();
+        setupControls();
+        animate();
     </script>
 </body>
 </html>
