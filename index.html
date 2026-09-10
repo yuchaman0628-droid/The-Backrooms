@@ -5,9 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>The Backrooms 3D</title>
     <style>
-        body {
+        * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
+        }
+        body {
             overflow: hidden;
             background-color: #000;
             font-family: 'Courier New', Courier, monospace;
@@ -32,35 +35,30 @@
             flex-direction: column;
             justify-content: space-between;
             padding: 20px;
-            box-sizing: border-box;
+            z-index: 2;
         }
 
         .hud-text {
             color: #ffff88;
-            font-size: 18px;
+            font-size: 16px;
             text-shadow: 2px 2px 4px #000;
+            font-weight: bold;
         }
 
         #crosshair {
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 8px;
-            height: 8px;
-            background-color: rgba(255, 255, 255, 0.4);
+            width: 6px;
+            height: 6px;
+            background-color: rgba(255, 255, 255, 0.6);
             border-radius: 50%;
             transform: translate(-50%, -50%);
-        }
-
-        /* Screen Overlay effects */
-        #vignette {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.8);
             pointer-events: none;
+            z-index: 2;
         }
 
-        /* Start / Game Over Screens */
+        /* Start / Game Over Overlay */
         #screen-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -75,29 +73,32 @@
         }
 
         h1 {
-            font-size: 42px;
-            margin-bottom: 10px;
-            letter-spacing: 5px;
+            font-size: 38px;
+            margin-bottom: 15px;
+            letter-spacing: 4px;
             color: #e6df75;
             text-shadow: 0 0 10px rgba(230, 223, 117, 0.5);
+            text-align: center;
         }
 
         p {
-            font-size: 16px;
-            margin-bottom: 30px;
+            font-size: 14px;
+            margin-bottom: 25px;
             text-align: center;
             line-height: 1.6;
-            max-width: 80%;
+            max-width: 85%;
         }
 
         button {
             padding: 12px 30px;
-            font-size: 20px;
+            font-size: 18px;
             font-family: inherit;
+            font-weight: bold;
             background-color: #33321d;
             color: #e6df75;
             border: 2px solid #e6df75;
             cursor: pointer;
+            border-radius: 4px;
             transition: all 0.2s;
         }
 
@@ -109,24 +110,25 @@
         /* Mobile Controls */
         #touch-controls {
             position: absolute;
-            bottom: 20px;
+            bottom: 0;
             left: 0;
             width: 100%;
-            height: 150px;
+            height: 100%;
             display: none;
-            pointer-events: auto;
+            pointer-events: none;
             z-index: 5;
         }
 
         #joystick-zone {
             position: absolute;
-            bottom: 20px;
-            left: 20px;
+            bottom: 30px;
+            left: 30px;
             width: 120px;
             height: 120px;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.15);
             border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 60px;
+            pointer-events: auto;
             touch-action: none;
         }
 
@@ -136,35 +138,41 @@
             left: 35px;
             width: 50px;
             height: 50px;
-            background: rgba(230, 223, 117, 0.5);
+            background: rgba(230, 223, 117, 0.7);
             border-radius: 25px;
+            pointer-events: none;
         }
 
         #look-zone {
             position: absolute;
-            bottom: 0;
+            top: 0;
             right: 0;
             width: 50%;
             height: 100%;
+            pointer-events: auto;
             touch-action: none;
         }
     </style>
 </head>
 <body>
     <div id="canvas-container"></div>
-    <div id="vignette"></div>
     <div id="crosshair"></div>
 
     <div id="ui">
-        <div class="hud-text">LEVEL 0 - THE TUTORIAL MAIN ROOM</div>
-        <div class="hud-text" id="status-text">逃げ道を探せ...</div>
+        <div class="hud-text">LEVEL 0 - THE BACKROOMS</div>
+        <div class="hud-text">【ライト常時点灯】徘徊する影から逃げろ...</div>
     </div>
 
-    <!-- Start & Game Over Screen -->
+    <!-- Start / Game Over Screen -->
     <div id="screen-overlay">
         <h1 id="title-text">THE BACKROOMS</h1>
-        <p id="desc-text">黄色い壁紙と蛍光灯のノイズが満ちる無限の空間に落ちてしまった。<br>徘徊する「何か」に見つからないよう注意しろ。<br><br>[操作] PC: WASDキー移動 / マウスで視点移動<br>スマホ: 画面左で移動 / 画面右で視点移動</p>
-        <button id="start-btn">探索を開始する</button>
+        <p id="desc-text">
+            迷い込んだ無限の迷路。<br>
+            ライトで周囲を照らしながら出口を探せ。<br><br>
+            <b>[PC操作]</b><br>画面クリックで開始 / WASDキーで移動 / マウスで視点移動<br><br>
+            <b>[スマホ操作]</b><br>画面左のスティックで移動 / 画面右側ドラッグで視点移動
+        </p>
+        <button id="start-btn">ゲームを開始する</button>
     </div>
 
     <!-- Mobile Touch Controls -->
@@ -173,88 +181,99 @@
         <div id="look-zone"></div>
     </div>
 
-    <!-- Three.js Library -->
+    <!-- Three.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script>
-        // --- 1. MAP DATA (1 = Wall, 0 = Empty) ---
-        const MAP_SIZE = 16;
+        // --- 1. MAP DESIGN (1 = Wall, 0 = Passage) ---
+        const MAP_SIZE = 12;
         const map = [
-            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,1],
-            [1,0,1,0,1,0,1,1,1,0,1,0,1,1,0,1],
-            [1,0,1,0,0,0,0,0,1,0,0,0,1,0,0,1],
-            [1,0,1,1,1,1,0,1,1,1,1,0,1,0,1,1],
-            [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
-            [1,1,1,0,1,1,1,1,0,1,1,1,0,1,0,1],
-            [1,0,0,0,0,0,0,1,0,0,0,0,0,1,0,1],
-            [1,0,1,1,1,0,1,1,1,1,0,1,1,1,0,1],
-            [1,0,0,0,1,0,0,0,0,1,0,0,0,1,0,1],
-            [1,1,1,0,1,1,0,1,0,1,1,1,0,1,0,1],
-            [1,0,0,0,0,1,0,1,0,0,0,1,0,0,0,1],
-            [1,0,1,1,0,1,0,1,1,1,0,1,1,1,0,1],
-            [1,0,0,1,0,0,0,0,0,1,0,0,0,1,0,1],
-            [1,1,0,0,0,1,1,1,0,0,0,1,0,0,0,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,0,0,0,1,0,0,0,0,0,0,1],
+            [1,0,1,0,1,0,1,1,1,1,0,1],
+            [1,0,1,0,0,0,0,0,0,1,0,1],
+            [1,0,1,1,1,1,0,1,0,1,0,1],
+            [1,0,0,0,0,1,0,1,0,0,0,1],
+            [1,1,1,0,1,1,0,1,1,1,0,1],
+            [1,0,0,0,0,0,0,0,0,1,0,1],
+            [1,0,1,1,1,1,1,1,0,1,0,1],
+            [1,0,1,0,0,0,0,1,0,0,0,1],
+            [1,0,0,0,1,1,0,0,0,1,0,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1]
         ];
 
         const UNIT_SIZE = 4;
 
-        // --- 2. GAME STATE & SETUP ---
-        let scene, camera, renderer;
+        // --- 2. GAME VARIABLES ---
+        let scene, camera, renderer, flashlight, ambientLight;
         let isPlaying = false;
+        
+        // Input Control States
         let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
         let yaw = 0, pitch = 0;
-        const player = { x: 6, z: 6, radius: 0.8, speed: 0.08 };
 
-        // Entity (Monster) Data
-        const entity = {
-            mesh: null,
-            x: 14 * UNIT_SIZE,
-            z: 14 * UNIT_SIZE,
-            speed: 0.045
+        // Player Data
+        const player = {
+            x: 1.5 * UNIT_SIZE,
+            z: 1.5 * UNIT_SIZE,
+            speed: 0.08
         };
 
+        // Entity (Enemy) Data
+        const entity = {
+            mesh: null,
+            x: 9.5 * UNIT_SIZE,
+            z: 9.5 * UNIT_SIZE,
+            speed: 0.04
+        };
+
+        // UI Elements
         const screenOverlay = document.getElementById('screen-overlay');
         const startBtn = document.getElementById('start-btn');
         const titleText = document.getElementById('title-text');
         const descText = document.getElementById('desc-text');
         const touchControls = document.getElementById('touch-controls');
 
-        // Check Device
         const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
-        // --- 3. TEXTURE GENERATION (Procedural Canvas Textures) ---
-        function createYellowWallTexture() {
+        // --- 3. TEXTURE GENERATORS ---
+        function createWallTexture() {
             const canvas = document.createElement('canvas');
             canvas.width = 256; canvas.height = 256;
             const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#c8bc59';
+            
+            // Yellow base
+            ctx.fillStyle = '#dbce6b';
             ctx.fillRect(0, 0, 256, 256);
-            // Add Mono-pattern noise/lines
-            ctx.strokeStyle = '#a69b42';
-            ctx.lineWidth = 2;
+            
+            // Vertical wallpaper pattern
+            ctx.strokeStyle = '#b8aa48';
+            ctx.lineWidth = 3;
             for(let i = 0; i < 256; i += 16) {
                 ctx.beginPath();
                 ctx.moveTo(i, 0); ctx.lineTo(i, 256);
                 ctx.stroke();
             }
-            // Noise
-            for (let i = 0; i < 3000; i++) {
-                ctx.fillStyle = Math.random() > 0.5 ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)';
-                ctx.fillRect(Math.random()*256, Math.random()*256, 2, 2);
+
+            // Dirty Noise
+            for (let i = 0; i < 1500; i++) {
+                ctx.fillStyle = Math.random() > 0.5 ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)';
+                ctx.fillRect(Math.random()*256, Math.random()*256, 3, 3);
             }
             return new THREE.CanvasTexture(canvas);
         }
 
-        function createCarpetTexture() {
+        function createFloorTexture() {
             const canvas = document.createElement('canvas');
             canvas.width = 128; canvas.height = 128;
             const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#615833';
+            
+            // Carpet Base
+            ctx.fillStyle = '#6e633d';
             ctx.fillRect(0, 0, 128, 128);
-            for (let i = 0; i < 2000; i++) {
-                ctx.fillStyle = Math.random() > 0.5 ? '#4a4325' : '#786e42';
+            
+            for (let i = 0; i < 1000; i++) {
+                ctx.fillStyle = Math.random() > 0.5 ? '#52492a' : '#85784d';
                 ctx.fillRect(Math.random()*128, Math.random()*128, 2, 2);
             }
             const texture = new THREE.CanvasTexture(canvas);
@@ -264,80 +283,89 @@
             return texture;
         }
 
-        // --- 4. THREE.JS SCENE CREATION ---
-        function initScene() {
+        // --- 4. SCENE INITIALIZATION ---
+        function init() {
+            const container = document.getElementById('canvas-container');
+
+            // Scene setup
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0a0a05);
-            scene.fog = new THREE.FogExp2(0x1a190e, 0.08);
+            scene.background = new THREE.Color(0x050503);
+            scene.fog = new THREE.FogExp2(0x050503, 0.05);
 
+            // Camera setup
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
-            camera.position.y = 1.6; // Eye level
+            camera.position.set(player.x, 1.6, player.z);
 
+            // Renderer setup
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            document.getElementById('canvas-container').appendChild(renderer.domElement);
+            container.appendChild(renderer.domElement);
 
-            // Ambient Light
-            const ambientLight = new THREE.AmbientLight(0x666244, 0.8);
+            // --- LIGHTING (ライトの設定) ---
+            // 1. 環境光（全体をうっすら明るくする）
+            ambientLight = new THREE.AmbientLight(0x444433, 0.5);
             scene.add(ambientLight);
 
-            // Materials
-            const wallTexture = createYellowWallTexture();
+            // 2. プレイヤーが持つ懐中電灯（スポットライト）
+            flashlight = new THREE.SpotLight(0xffffff, 1.8, 22, Math.PI / 5, 0.4, 1);
+            camera.add(flashlight);
+            flashlight.position.set(0, 0, 0);
+            flashlight.target.position.set(0, 0, -1);
+            camera.add(flashlight.target);
+            scene.add(camera);
+
+            // Materials & Textures
+            const wallTexture = createWallTexture();
             wallTexture.wrapS = THREE.RepeatWrapping;
             wallTexture.wrapT = THREE.RepeatWrapping;
 
-            const wallMaterial = new THREE.MeshLambertMaterial({ map: wallTexture });
-            const floorMaterial = new THREE.MeshLambertMaterial({ map: createCarpetTexture() });
-            const ceilingMaterial = new THREE.MeshLambertMaterial({ color: 0xd4ce96 });
+            const wallMat = new THREE.MeshLambertMaterial({ map: wallTexture });
+            const floorMat = new THREE.MeshLambertMaterial({ map: createFloorTexture() });
+            const ceilingMat = new THREE.MeshLambertMaterial({ color: 0xc7c08d });
 
-            // Floor & Ceiling
-            const mapTotalSize = MAP_SIZE * UNIT_SIZE;
-            const floorGeo = new THREE.PlaneGeometry(mapTotalSize, mapTotalSize);
-            const floor = new THREE.Mesh(floorGeo, floorMaterial);
+            // Create Floor & Ceiling
+            const totalMapSize = MAP_SIZE * UNIT_SIZE;
+            const planeGeo = new THREE.PlaneGeometry(totalMapSize, totalMapSize);
+
+            const floor = new THREE.Mesh(planeGeo, floorMat);
             floor.rotation.x = -Math.PI / 2;
-            floor.position.set(mapTotalSize/2, 0, mapTotalSize/2);
+            floor.position.set(totalMapSize / 2, 0, totalMapSize / 2);
             scene.add(floor);
 
-            const ceiling = new THREE.Mesh(floorGeo, ceilingMaterial);
+            const ceiling = new THREE.Mesh(planeGeo, ceilingMat);
             ceiling.rotation.x = Math.PI / 2;
-            ceiling.position.set(mapTotalSize/2, 3, mapTotalSize/2);
+            ceiling.position.set(totalMapSize / 2, 3, totalMapSize / 2);
             scene.add(ceiling);
 
-            // Build Walls & Lights
+            // Build Wall Mesh
             const wallGeo = new THREE.BoxGeometry(UNIT_SIZE, 3, UNIT_SIZE);
-            
             for (let r = 0; r < MAP_SIZE; r++) {
                 for (let c = 0; c < MAP_SIZE; c++) {
                     if (map[r][c] === 1) {
-                        const wall = new THREE.Mesh(wallGeo, wallMaterial);
-                        wall.position.set(c * UNIT_SIZE + UNIT_SIZE/2, 1.5, r * UNIT_SIZE + UNIT_SIZE/2);
+                        const wall = new THREE.Mesh(wallGeo, wallMat);
+                        wall.position.set(c * UNIT_SIZE + UNIT_SIZE / 2, 1.5, r * UNIT_SIZE + UNIT_SIZE / 2);
                         scene.add(wall);
-                    } else if (Math.random() < 0.2) {
-                        // Ceil Lights
-                        const light = new THREE.PointLight(0xfff5ab, 0.6, 8);
-                        light.position.set(c * UNIT_SIZE + UNIT_SIZE/2, 2.8, r * UNIT_SIZE + UNIT_SIZE/2);
-                        scene.add(light);
                     }
                 }
             }
 
-            // Create Entity (Wireframe Spooky Shadow)
-            const entityGeo = new THREE.CipherGeometry ? new THREE.CipherGeometry() : new THREE.ConeGeometry(0.6, 2.2, 8);
-            const entityMat = new THREE.MeshBasicMaterial({ color: 0x050505, wireframe: true });
+            // Create Monster (Entity)
+            const entityGeo = new THREE.CylinderGeometry(0.4, 0.4, 2.2, 8);
+            const entityMat = new THREE.MeshBasicMaterial({ color: 0x0a0a0a, wireframe: true });
             entity.mesh = new THREE.Mesh(entityGeo, entityMat);
             entity.mesh.position.set(entity.x, 1.1, entity.z);
             scene.add(entity.mesh);
 
-            // Set initial camera position
-            camera.position.set(player.x * UNIT_SIZE, 1.6, player.z * UNIT_SIZE);
+            // Event Listeners
+            window.addEventListener('resize', onWindowResize);
+            setupControls();
         }
 
-        // --- 5. CONTROLS & INPUTS ---
+        // --- 5. INPUT CONTROLS ---
         function setupControls() {
             // Keyboard Controls
             window.addEventListener('keydown', (e) => {
-                if (!isPlaying) return;
                 if (e.code === 'KeyW' || e.code === 'ArrowUp') moveForward = true;
                 if (e.code === 'KeyS' || e.code === 'ArrowDown') moveBackward = true;
                 if (e.code === 'KeyA' || e.code === 'ArrowLeft') moveLeft = true;
@@ -351,24 +379,24 @@
                 if (e.code === 'KeyD' || e.code === 'ArrowRight') moveRight = false;
             });
 
-            // Mouse Look (Pointer Lock)
+            // Mouse Look (PC)
             document.addEventListener('mousemove', (e) => {
-                if (!isPlaying || (document.pointerLockElement !== document.body && !isMobile)) return;
-                yaw -= e.movementX * 0.002;
-                pitch -= e.movementY * 0.002;
-                pitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, pitch));
+                if (!isPlaying) return;
+                if (document.pointerLockElement === document.body || isMobile) {
+                    yaw -= e.movementX * 0.0025;
+                    pitch -= e.movementY * 0.0025;
+                    pitch = Math.max(-Math.PI / 2.3, Math.min(Math.PI / 2.3, pitch));
+                }
             });
 
-            // Mobile Controls Setup
+            // Mobile Controls
             if (isMobile) {
                 touchControls.style.display = 'block';
-                setupTouchControls();
+                setupTouchEvents();
             }
-
-            window.addEventListener('resize', onWindowResize);
         }
 
-        function setupTouchControls() {
+        function setupTouchEvents() {
             const joystickZone = document.getElementById('joystick-zone');
             const joystickKnob = document.getElementById('joystick-knob');
             const lookZone = document.getElementById('look-zone');
@@ -395,7 +423,7 @@
                         let dy = touch.clientY - touchStartY;
                         let dist = Math.min(Math.hypot(dx, dy), 40);
                         let angle = Math.atan2(dy, dx);
-                        
+
                         joystickKnob.style.transform = `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px)`;
 
                         moveForward = dy < -10;
@@ -406,16 +434,16 @@
                     if (touch.identifier === lookTouchId) {
                         let dx = touch.clientX - lastLookX;
                         let dy = touch.clientY - lastLookY;
-                        yaw -= dx * 0.005;
-                        pitch -= dy * 0.005;
-                        pitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, pitch));
+                        yaw -= dx * 0.006;
+                        pitch -= dy * 0.006;
+                        pitch = Math.max(-Math.PI / 2.3, Math.min(Math.PI / 2.3, pitch));
                         lastLookX = touch.clientX;
                         lastLookY = touch.clientY;
                     }
                 }
             });
 
-            window.addEventListener('touchend', (e) => {
+            const resetTouch = (e) => {
                 for (let touch of e.changedTouches) {
                     if (touch.identifier === moveTouchId) {
                         moveTouchId = null;
@@ -426,7 +454,10 @@
                         lookTouchId = null;
                     }
                 }
-            });
+            };
+
+            window.addEventListener('touchend', resetTouch);
+            window.addEventListener('touchcancel', resetTouch);
 
             lookZone.addEventListener('touchstart', (e) => {
                 for (let touch of e.changedTouches) {
@@ -439,17 +470,26 @@
             });
         }
 
-        // --- 6. LOGIC & COLLISION ---
-        function checkCollision(nx, nz) {
-            const gridX = Math.floor(nx / UNIT_SIZE);
-            const gridZ = Math.floor(nz / UNIT_SIZE);
-            
-            if (gridX < 0 || gridX >= MAP_SIZE || gridZ < 0 || gridZ >= MAP_SIZE) return true;
-            return map[gridZ][gridX] === 1;
+        // --- 6. LOGIC & MOVEMENT ---
+        function checkWallCollision(newX, newZ) {
+            const padding = 0.5; // Player collision radius
+            const checkPoints = [
+                { x: newX + padding, z: newZ + padding },
+                { x: newX - padding, z: newZ + padding },
+                { x: newX + padding, z: newZ - padding },
+                { x: newX - padding, z: newZ - padding }
+            ];
+
+            for (let pt of checkPoints) {
+                const gridX = Math.floor(pt.x / UNIT_SIZE);
+                const gridZ = Math.floor(pt.z / UNIT_SIZE);
+                if (gridX < 0 || gridX >= MAP_SIZE || gridZ < 0 || gridZ >= MAP_SIZE) return true;
+                if (map[gridZ][gridX] === 1) return true;
+            }
+            return false;
         }
 
         function updatePlayer() {
-            // Direction vectors
             const dirX = Math.sin(yaw);
             const dirZ = Math.cos(yaw);
 
@@ -461,54 +501,56 @@
             if (moveLeft)     { moveX -= dirZ; moveZ += dirX; }
             if (moveRight)    { moveX += dirZ; moveZ -= dirX; }
 
-            // Normalize
             const len = Math.hypot(moveX, moveZ);
             if (len > 0) {
                 moveX = (moveX / len) * player.speed;
                 moveZ = (moveZ / len) * player.speed;
 
-                // Move with collision checking
-                if (!checkCollision(camera.position.x + moveX * 2, camera.position.z)) {
+                // Move X with collision
+                if (!checkWallCollision(camera.position.x + moveX, camera.position.z)) {
                     camera.position.x += moveX;
                 }
-                if (!checkCollision(camera.position.x, camera.position.z + moveZ * 2)) {
+                // Move Z with collision
+                if (!checkWallCollision(camera.position.x, camera.position.z + moveZ)) {
                     camera.position.z += moveZ;
                 }
             }
 
-            // Head bobbing
+            // Head Bobbing Effect
             if (len > 0) {
-                camera.position.y = 1.6 + Math.sin(Date.now() * 0.008) * 0.05;
+                camera.position.y = 1.6 + Math.sin(Date.now() * 0.01) * 0.04;
+            } else {
+                camera.position.y = 1.6;
             }
 
-            // Rotation
+            // Apply Camera Rotation
             camera.rotation.order = "YXZ";
             camera.rotation.y = yaw;
             camera.rotation.x = pitch;
         }
 
         function updateEntity() {
-            // Chase logic
             const dx = camera.position.x - entity.mesh.position.x;
             const dz = camera.position.z - entity.mesh.position.z;
             const dist = Math.hypot(dx, dz);
 
-            if (dist < 15) { // Active distance
+            // Chase Player
+            if (dist < 18) {
                 entity.mesh.position.x += (dx / dist) * entity.speed;
                 entity.mesh.position.z += (dz / dist) * entity.speed;
-                entity.mesh.rotation.y = Math.atan2(dx, dz);
             }
 
-            // Game Over Check
+            // Game Over Collision
             if (dist < 1.2) {
                 gameOver();
             }
         }
 
-        // --- 7. GAME STATE MANAGEMENT ---
+        // --- 7. GAME STATE CONTROL ---
         function startGame() {
             screenOverlay.style.display = 'none';
             isPlaying = true;
+
             if (!isMobile) {
                 document.body.requestPointerLock();
             }
@@ -517,15 +559,18 @@
         function gameOver() {
             isPlaying = false;
             if (document.exitPointerLock) document.exitPointerLock();
+
             titleText.innerText = "YOU DIED";
             titleText.style.color = "#ff3333";
-            descText.innerHTML = "「何か」に捕まってしまった...<br>バックルームの虚無へと消えていく。";
-            startBtn.innerText = "もう一度やり直す";
+            descText.innerHTML = "黒い影に捕まってしまった...<br>バックルームから脱出することはできなかった。";
+            startBtn.innerText = "リトライ";
             screenOverlay.style.display = 'flex';
 
-            // Reset Position
-            camera.position.set(player.x * UNIT_SIZE, 1.6, player.z * UNIT_SIZE);
-            entity.mesh.position.set(14 * UNIT_SIZE, 1.1, 14 * UNIT_SIZE);
+            // Reset positions
+            camera.position.set(1.5 * UNIT_SIZE, 1.6, 1.5 * UNIT_SIZE);
+            entity.mesh.position.set(9.5 * UNIT_SIZE, 1.1, 9.5 * UNIT_SIZE);
+            yaw = 0;
+            pitch = 0;
         }
 
         function onWindowResize() {
@@ -534,7 +579,7 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
-        // --- 8. GAME LOOP ---
+        // --- 8. MAIN GAME LOOP ---
         function animate() {
             requestAnimationFrame(animate);
 
@@ -546,10 +591,9 @@
             renderer.render(scene, camera);
         }
 
-        // Start Setup
+        // Initialize and Run
         startBtn.addEventListener('click', startGame);
-        initScene();
-        setupControls();
+        init();
         animate();
     </script>
 </body>
