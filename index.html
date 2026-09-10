@@ -3,163 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>The Backrooms 3D - Deluxe</title>
+    <title>The Backrooms 3D - Levels & Sound</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            overflow: hidden;
-            background-color: #000;
+            overflow: hidden; background-color: #000;
             font-family: 'Courier New', Courier, monospace;
-            user-select: none;
-            -webkit-user-select: none;
+            user-select: none; -webkit-user-select: none;
         }
 
-        #canvas-container {
-            width: 100vw;
-            height: 100vh;
-        }
+        #canvas-container { width: 100vw; height: 100vh; }
 
         /* UI Overlay */
         #ui {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 20px;
-            z-index: 2;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; display: flex; flex-direction: column;
+            justify-content: space-between; padding: 20px; z-index: 2;
         }
-
         .hud-text {
-            color: #ffff88;
-            font-size: 16px;
-            text-shadow: 2px 2px 4px #000;
-            font-weight: bold;
+            color: #ffff88; font-size: 16px; text-shadow: 2px 2px 4px #000; font-weight: bold;
         }
-
         #crosshair {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 4px;
-            height: 4px;
-            background-color: rgba(255, 255, 255, 0.7);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            z-index: 2;
+            position: absolute; top: 50%; left: 50%; width: 4px; height: 4px;
+            background-color: rgba(255, 255, 255, 0.7); border-radius: 50%;
+            transform: translate(-50%, -50%); pointer-events: none; z-index: 2;
         }
-
-        /* Vignette Screen Effect */
         #vignette {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.9);
-            pointer-events: none;
-            z-index: 1;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.9); pointer-events: none; z-index: 1;
         }
 
-        /* Start / Game Over Overlay */
+        /* Screen Overlay */
         #screen-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: #d1cc84;
-            pointer-events: auto;
-            z-index: 10;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; color: #d1cc84;
+            pointer-events: auto; z-index: 10;
         }
-
         h1 {
-            font-size: 40px;
-            margin-bottom: 15px;
-            letter-spacing: 5px;
-            color: #e6df75;
-            text-shadow: 0 0 12px rgba(230, 223, 117, 0.6);
-            text-align: center;
+            font-size: 40px; margin-bottom: 15px; letter-spacing: 5px; color: #e6df75;
+            text-shadow: 0 0 12px rgba(230, 223, 117, 0.6); text-align: center;
         }
-
-        p {
-            font-size: 14px;
-            margin-bottom: 25px;
-            text-align: center;
-            line-height: 1.6;
-            max-width: 85%;
-        }
-
+        p { font-size: 14px; margin-bottom: 25px; text-align: center; line-height: 1.6; max-width: 85%; }
+        
+        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
         button {
-            padding: 12px 32px;
-            font-size: 18px;
-            font-family: inherit;
-            font-weight: bold;
-            background-color: #33321d;
-            color: #e6df75;
-            border: 2px solid #e6df75;
-            cursor: pointer;
-            border-radius: 4px;
-            transition: all 0.2s;
+            padding: 12px 24px; font-size: 16px; font-family: inherit; font-weight: bold;
+            background-color: #33321d; color: #e6df75; border: 2px solid #e6df75;
+            cursor: pointer; border-radius: 4px; transition: all 0.2s;
         }
+        button:hover { background-color: #e6df75; color: #000; }
 
-        button:hover {
-            background-color: #e6df75;
-            color: #000;
+        /* Encyclopedia Modal */
+        #book-modal {
+            display: none; position: absolute; top: 10%; left: 10%; width: 80%; height: 80%;
+            background: rgba(20, 20, 20, 0.95); border: 2px solid #e6df75;
+            color: #fff; z-index: 20; padding: 20px; overflow-y: auto; flex-direction: column;
         }
+        .book-item { margin-bottom: 20px; border-bottom: 1px solid #555; padding-bottom: 10px; }
+        .book-item h3 { color: #e6df75; margin-bottom: 5px; }
 
         /* Mobile Controls */
         #touch-controls {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: none;
-            pointer-events: none;
-            z-index: 5;
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
+            display: none; pointer-events: none; z-index: 5;
         }
-
         #joystick-zone {
-            position: absolute;
-            bottom: 30px;
-            left: 30px;
-            width: 120px;
-            height: 120px;
-            background: rgba(255, 255, 255, 0.15);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 60px;
-            pointer-events: auto;
-            touch-action: none;
+            position: absolute; bottom: 30px; left: 30px; width: 120px; height: 120px;
+            background: rgba(255, 255, 255, 0.15); border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 60px; pointer-events: auto; touch-action: none;
         }
-
         #joystick-knob {
-            position: absolute;
-            top: 35px;
-            left: 35px;
-            width: 50px;
-            height: 50px;
-            background: rgba(230, 223, 117, 0.7);
-            border-radius: 25px;
-            pointer-events: none;
+            position: absolute; top: 35px; left: 35px; width: 50px; height: 50px;
+            background: rgba(230, 223, 117, 0.7); border-radius: 25px; pointer-events: none;
         }
-
         #look-zone {
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 50%;
-            height: 100%;
-            pointer-events: auto;
-            touch-action: none;
+            position: absolute; top: 0; right: 0; width: 50%; height: 100%;
+            pointer-events: auto; touch-action: none;
         }
     </style>
 </head>
@@ -169,20 +89,29 @@
     <div id="crosshair"></div>
 
     <div id="ui">
-        <div class="hud-text">LEVEL 0 - THE BACKROOMS</div>
-        <div class="hud-text" id="status-text">【目標】ハウラーとスマイリーを避け、赤い「EXIT」の扉へ到達せよ！</div>
+        <div class="hud-text" id="level-display">LEVEL 0 - THE BACKROOMS</div>
+        <div class="hud-text" id="status-text">【目標】エンティティを避け、赤い「EXIT」の扉へ到達せよ！</div>
     </div>
 
     <!-- Start / Game Over Screen -->
     <div id="screen-overlay">
         <h1 id="title-text">THE BACKROOMS</h1>
         <p id="desc-text">
-            蛍光灯が明滅する黄色い迷宮。<br>
-            異形「ハウラー」と暗闇の「スマイリー」を避け、脱出口（EXIT）を探せ。<br><br>
             <b>[PC操作]</b> WASD移動 / マウス視点移動<br>
             <b>[スマホ操作]</b> 左スティック移動 / 右エリアドラッグ視点移動
         </p>
         <button id="start-btn">探索を開始する</button>
+        <div class="btn-group">
+            <button onclick="openBook('entity')">エンティティ図鑑</button>
+            <button onclick="openBook('level')">Level図鑑</button>
+        </div>
+    </div>
+
+    <!-- Encyclopedia Modal -->
+    <div id="book-modal">
+        <h2 id="book-title" style="color:#e6df75; margin-bottom: 20px; text-align: center;">図鑑</h2>
+        <div id="book-content"></div>
+        <button onclick="closeBook()" style="margin-top: 20px; align-self: center;">閉じる</button>
     </div>
 
     <!-- Mobile Touch Controls -->
@@ -195,7 +124,98 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script>
-        // --- 1. MAP DESIGN ---
+        // --- SOUND SYSTEM (Web Audio API) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let lastStepTime = 0;
+
+        function playSound(type) {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            const now = audioCtx.currentTime;
+            
+            if (type === 'step') {
+                if (Date.now() - lastStepTime < 400) return; // 歩行音の間隔
+                lastStepTime = Date.now();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(100, now);
+                osc.frequency.exponentialRampToValueAtTime(30, now + 0.1);
+                gainNode.gain.setValueAtTime(0.05, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+                osc.start(now); osc.stop(now + 0.1);
+            } else if (type === 'clear') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.setValueAtTime(600, now + 0.2);
+                gainNode.gain.setValueAtTime(0.1, now);
+                gainNode.gain.linearRampToValueAtTime(0, now + 1);
+                osc.start(now); osc.stop(now + 1);
+            } else if (type === 'death') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(20, now + 1.5);
+                gainNode.gain.setValueAtTime(0.3, now);
+                gainNode.gain.linearRampToValueAtTime(0, now + 1.5);
+                osc.start(now); osc.stop(now + 1.5);
+            }
+        }
+
+        // --- LEVEL DATA (本家の設定に沿ったレベル) ---
+        const levelsData = [
+            {
+                name: "LEVEL 0 - THE LOBBY",
+                wallBase: '#ccbe5a', wallLine: '#a89a42',
+                floorBase: '#5e5433', floorDot: '#423b22',
+                ceilColor: 0xb8b07d, ambientColor: 0xd1c78e, ambientIntensity: 1.2, fogColor: 0x1a190e,
+                entities: ["howler", "smiler"]
+            },
+            {
+                name: "LEVEL 1 - HABITABLE ZONE",
+                wallBase: '#555555', wallLine: '#333333',
+                floorBase: '#444444', floorDot: '#222222',
+                ceilColor: 0x333333, ambientColor: 0xffffff, ambientIntensity: 0.6, fogColor: 0x222222,
+                entities: ["hound"]
+            },
+            {
+                name: "LEVEL 2 - PIPE DREAMS",
+                wallBase: '#3a1f11', wallLine: '#1f1009',
+                floorBase: '#29140a', floorDot: '#140a05',
+                ceilColor: 0x1a0d05, ambientColor: 0xffaa55, ambientIntensity: 0.5, fogColor: 0x1a0502,
+                entities: ["smiler", "faceling"]
+            }
+        ];
+        let currentLevel = 0;
+
+        // --- ENCYCLOPEDIA CONTENT ---
+        const encyclopedia = {
+            entity: [
+                { name: "ハウラー (Howler)", desc: "Level 0に生息。針金のような体と不気味な顔を持つ。音に敏感で近づくと襲ってくる。" },
+                { name: "スマイリー (Smiler)", desc: "暗闇に潜む発光する笑顔。常にこちらを見つめ、暗い場所で活動する。" },
+                { name: "ハウンド (Hound)", desc: "Level 1に生息。四足歩行で素早く襲い掛かる狂犬のような人型エンティティ。" },
+                { name: "フェイスリング (Faceling)", desc: "Level 2に生息。顔のパーツが一切ない人型エンティティ。ゆっくりと追跡してくる。" }
+            ],
+            level: [
+                { name: "Level 0 - The Lobby", desc: "狂気の黄色い壁紙と湿った絨毯が続く無限の空間。蛍光灯の音が響く。" },
+                { name: "Level 1 - Habitable Zone", desc: "無機質で暗いコンクリートの倉庫。霧がかかっており視界が悪い。" },
+                { name: "Level 2 - Pipe Dreams", desc: "灼熱のパイプが通るレンガとコンクリートの通路。非常に高温で危険。" }
+            ]
+        };
+
+        function openBook(type) {
+            document.getElementById('book-modal').style.display = 'flex';
+            document.getElementById('book-title').innerText = type === 'entity' ? "エンティティ図鑑" : "Level図鑑";
+            let html = "";
+            encyclopedia[type].forEach(item => {
+                html += `<div class="book-item"><h3>${item.name}</h3><p style="text-align:left;">${item.desc}</p></div>`;
+            });
+            document.getElementById('book-content').innerHTML = html;
+        }
+        function closeBook() { document.getElementById('book-modal').style.display = 'none'; }
+
+        // --- MAP & VARIABLES ---
         const MAP_SIZE = 14;
         const map = [
             [1,1,1,1,1,1,1,1,1,1,1,1,1,1],
@@ -215,52 +235,33 @@
         ];
 
         const UNIT_SIZE = 4;
-
-        // --- 2. GAME SETUP & VARIABLES ---
         let scene, camera, renderer;
-        let ambientLight;
         let isPlaying = false;
         let lightsList = [];
-
-        // Exit Door Object
         let exitDoor = null;
+        let entities = [];
 
         // Input States
         let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
         let yaw = 0, pitch = 0;
 
-        // Player Data
-        const player = {
-            x: 1.5 * UNIT_SIZE,
-            z: 1.5 * UNIT_SIZE,
-            speed: 0.085
-        };
-
-        // Entities Data
-        const entities = [];
-
-        // UI Elements
+        const player = { x: 1.5 * UNIT_SIZE, z: 1.5 * UNIT_SIZE, speed: 0.085 };
         const screenOverlay = document.getElementById('screen-overlay');
         const startBtn = document.getElementById('start-btn');
         const titleText = document.getElementById('title-text');
         const descText = document.getElementById('desc-text');
-        const touchControls = document.getElementById('touch-controls');
-
         const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        let isEventsSetup = false;
 
-        // --- 3. TEXTURE GENERATORS ---
-        function createWallTexture() {
+        // --- TEXTURE GENERATORS ---
+        function createWallTexture(baseCol, lineCol) {
             const canvas = document.createElement('canvas');
             canvas.width = 256; canvas.height = 256;
             const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#ccbe5a';
-            ctx.fillRect(0, 0, 256, 256);
-            ctx.strokeStyle = '#a89a42';
-            ctx.lineWidth = 4;
+            ctx.fillStyle = baseCol; ctx.fillRect(0, 0, 256, 256);
+            ctx.strokeStyle = lineCol; ctx.lineWidth = 4;
             for(let i = 0; i < 256; i += 16) {
-                ctx.beginPath();
-                ctx.moveTo(i, 0); ctx.lineTo(i, 256);
-                ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 256); ctx.stroke();
             }
             for (let i = 0; i < 2000; i++) {
                 ctx.fillStyle = Math.random() > 0.5 ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.05)';
@@ -269,212 +270,145 @@
             return new THREE.CanvasTexture(canvas);
         }
 
-        function createFloorTexture() {
+        function createFloorTexture(baseCol, dotCol) {
             const canvas = document.createElement('canvas');
             canvas.width = 128; canvas.height = 128;
             const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#5e5433';
-            ctx.fillRect(0, 0, 128, 128);
+            ctx.fillStyle = baseCol; ctx.fillRect(0, 0, 128, 128);
             for (let i = 0; i < 1500; i++) {
-                ctx.fillStyle = Math.random() > 0.5 ? '#423b22' : '#786c44';
+                ctx.fillStyle = dotCol;
                 ctx.fillRect(Math.random()*128, Math.random()*128, 2, 2);
             }
             const texture = new THREE.CanvasTexture(canvas);
-            texture.wrapS = THREE.RepeatWrapping;
-            texture.wrapT = THREE.RepeatWrapping;
+            texture.wrapS = THREE.RepeatWrapping; texture.wrapT = THREE.RepeatWrapping;
             texture.repeat.set(MAP_SIZE, MAP_SIZE);
             return texture;
         }
 
-        // Smiler Face Texture Generator
         function createSmilerTexture() {
             const canvas = document.createElement('canvas');
             canvas.width = 256; canvas.height = 256;
             const ctx = canvas.getContext('2d');
-            
-            ctx.fillStyle = '#000000';
-            ctx.fillRect(0, 0, 256, 256);
-
-            // Glowing White Face
-            ctx.fillStyle = '#ffffff';
-            ctx.shadowColor = '#ffffff';
-            ctx.shadowBlur = 15;
-
-            // Eyes
-            ctx.beginPath();
-            ctx.ellipse(80, 90, 25, 35, -0.2, 0, Math.PI * 2);
-            ctx.ellipse(176, 90, 25, 35, 0.2, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Wide Glowing Smile
-            ctx.beginPath();
-            ctx.arc(128, 130, 80, 0.1 * Math.PI, 0.9 * Math.PI, false);
-            ctx.lineWidth = 12;
-            ctx.strokeStyle = '#ffffff';
-            ctx.stroke();
-
-            // Sharp Teeth Lines
+            ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, 256, 256);
+            ctx.fillStyle = '#ffffff'; ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 15;
+            ctx.beginPath(); ctx.ellipse(80, 90, 25, 35, -0.2, 0, Math.PI * 2);
+            ctx.ellipse(176, 90, 25, 35, 0.2, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(128, 130, 80, 0.1 * Math.PI, 0.9 * Math.PI, false);
+            ctx.lineWidth = 12; ctx.strokeStyle = '#ffffff'; ctx.stroke();
             for(let x = 60; x <= 196; x += 15) {
-                ctx.beginPath();
-                ctx.moveTo(x, 180);
-                ctx.lineTo(x, 205);
-                ctx.lineWidth = 4;
-                ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(x, 180); ctx.lineTo(x, 205);
+                ctx.lineWidth = 4; ctx.stroke();
             }
-
             return new THREE.CanvasTexture(canvas);
         }
 
-        // EXIT Text Door Texture
         function createExitDoorTexture() {
             const canvas = document.createElement('canvas');
             canvas.width = 256; canvas.height = 512;
             const ctx = canvas.getContext('2d');
-
-            ctx.fillStyle = '#8b0000'; // Red Door
-            ctx.fillRect(0, 0, 256, 512);
-
-            ctx.strokeStyle = '#330000';
-            ctx.lineWidth = 10;
-            ctx.strokeRect(10, 10, 236, 492);
-
-            // EXIT Sign
-            ctx.fillStyle = '#00ff00';
-            ctx.font = 'bold 50px Arial';
-            ctx.textAlign = 'center';
-            ctx.shadowColor = '#00ff00';
-            ctx.shadowBlur = 15;
-            ctx.fillText('EXIT', 128, 100);
-
+            ctx.fillStyle = '#8b0000'; ctx.fillRect(0, 0, 256, 512);
+            ctx.strokeStyle = '#330000'; ctx.lineWidth = 10; ctx.strokeRect(10, 10, 236, 492);
+            ctx.fillStyle = '#00ff00'; ctx.font = 'bold 50px Arial'; ctx.textAlign = 'center';
+            ctx.shadowColor = '#00ff00'; ctx.shadowBlur = 15; ctx.fillText('EXIT', 128, 100);
             return new THREE.CanvasTexture(canvas);
         }
 
-        // --- 4. ENTITY CREATORS ---
-        
-        // 1. Howler
+        // --- ENTITY CREATORS ---
         function createHowlerMesh() {
             const group = new THREE.Group();
-            const mat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3, metalness: 0.8 });
-
-            const bodyGeo = new THREE.CylinderGeometry(0.15, 0.05, 2.8, 8);
-            const body = new THREE.Mesh(bodyGeo, mat);
-            body.position.y = 1.4;
-            group.add(body);
-
-            const headGeo = new THREE.IcosahedronGeometry(0.3, 1);
-            const head = new THREE.Mesh(headGeo, mat);
-            head.position.y = 2.9;
-            head.scale.set(0.8, 1.4, 0.8);
-            group.add(head);
-
-            for (let side of [-1, 1]) {
-                const armGeo = new THREE.CylinderGeometry(0.04, 0.02, 2.2, 6);
-                const arm = new THREE.Mesh(armGeo, mat);
-                arm.position.set(side * 0.4, 1.8, 0.2);
-                arm.rotation.z = side * -0.3;
-                arm.rotation.x = 0.4;
-                group.add(arm);
-            }
-
-            for (let i = 0; i < 6; i++) {
-                const tendrilGeo = new THREE.TorusGeometry(0.3, 0.02, 4, 12, Math.PI);
-                const tendril = new THREE.Mesh(tendrilGeo, mat);
-                tendril.position.set((Math.random()-0.5)*0.3, 1.0 + i*0.3, (Math.random()-0.5)*0.3);
-                tendril.rotation.x = Math.random() * Math.PI;
-                group.add(tendril);
-            }
-
+            const mat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3 });
+            const body = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.05, 2.8, 8), mat);
+            body.position.y = 1.4; group.add(body);
+            const head = new THREE.Mesh(new THREE.IcosahedronGeometry(0.3, 1), mat);
+            head.position.y = 2.9; head.scale.set(0.8, 1.4, 0.8); group.add(head);
             return group;
         }
 
-        // 2. Smiler
         function createSmilerMesh() {
             const group = new THREE.Group();
-            
-            const smilerTex = createSmilerTexture();
-            const planeGeo = new THREE.PlaneGeometry(1.8, 1.8);
-            const planeMat = new THREE.MeshBasicMaterial({
-                map: smilerTex,
-                transparent: true,
-                blending: THREE.AdditiveBlending
-            });
-            const face = new THREE.Mesh(planeGeo, planeMat);
-            face.position.y = 1.5;
-            group.add(face);
-
-            const smilerLight = new THREE.PointLight(0xffffff, 0.8, 3);
-            smilerLight.position.y = 1.5;
-            group.add(smilerLight);
-
+            const mat = new THREE.MeshBasicMaterial({ map: createSmilerTexture(), transparent: true, blending: THREE.AdditiveBlending });
+            const face = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 1.8), mat);
+            face.position.y = 1.5; group.add(face);
+            const light = new THREE.PointLight(0xffffff, 0.8, 3);
+            light.position.y = 1.5; group.add(light);
             return group;
         }
 
-        // 3. EXIT Door (Clear Condition Target)
+        function createHoundMesh() {
+            const group = new THREE.Group();
+            const mat = new THREE.MeshStandardMaterial({ color: 0x2a1a10, roughness: 0.9 });
+            const body = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.5, 1.2), mat);
+            body.position.y = 0.4; group.add(body);
+            const head = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.4), mat);
+            head.position.set(0, 0.6, 0.6); group.add(head);
+            return group;
+        }
+
+        function createFacelingMesh() {
+            const group = new THREE.Group();
+            const mat = new THREE.MeshStandardMaterial({ color: 0xeecba6 }); // 肌色
+            const clothes = new THREE.MeshStandardMaterial({ color: 0x444444 });
+            const body = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 2.2), clothes);
+            body.position.y = 1.1; group.add(body);
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.25), mat);
+            head.position.y = 2.4; group.add(head);
+            return group;
+        }
+
         function createExitDoorMesh() {
             const group = new THREE.Group();
-            const doorGeo = new THREE.BoxGeometry(2, 2.8, 0.1);
-            const doorMat = new THREE.MeshStandardMaterial({ map: createExitDoorTexture() });
-            const door = new THREE.Mesh(doorGeo, doorMat);
-            door.position.y = 1.4;
-            group.add(door);
-
-            // Red/Green Exit Light
+            const door = new THREE.Mesh(new THREE.BoxGeometry(2, 2.8, 0.1), new THREE.MeshStandardMaterial({ map: createExitDoorTexture() }));
+            door.position.y = 1.4; group.add(door);
             const exitLight = new THREE.PointLight(0x00ff00, 1.5, 6);
-            exitLight.position.set(0, 2, 0.5);
-            group.add(exitLight);
-
+            exitLight.position.set(0, 2, 0.5); group.add(exitLight);
             return group;
         }
 
-        // --- 5. SCENE SETUP ---
-        function init() {
+        // --- SCENE SETUP (Levelに合わせて構築) ---
+        function initScene() {
+            const levelD = levelsData[currentLevel];
+            document.getElementById('level-display').innerText = levelD.name;
+
             const container = document.getElementById('canvas-container');
-
+            container.innerHTML = '';
+            
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x1a190e); // 部屋全体を明るく
-            scene.fog = new THREE.FogExp2(0x1a190e, 0.025);
+            scene.background = new THREE.Color(levelD.fogColor);
+            scene.fog = new THREE.FogExp2(levelD.fogColor, 0.035);
 
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+            if (!camera) camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
             camera.position.set(player.x, 1.6, player.z);
 
-            renderer = new THREE.WebGLRenderer({ antialias: true });
+            if (!renderer) {
+                renderer = new THREE.WebGLRenderer({ antialias: true });
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            }
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             container.appendChild(renderer.domElement);
 
-            // 【調整】全体を明るく照らす環境光（懐中電灯なしでもクッキリ見えます）
-            ambientLight = new THREE.AmbientLight(0xd1c78e, 1.2);
-            scene.add(ambientLight);
-
+            scene.add(new THREE.AmbientLight(levelD.ambientColor, levelD.ambientIntensity));
             scene.add(camera);
 
-            // Textures & Materials
-            const wallTexture = createWallTexture();
-            wallTexture.wrapS = THREE.RepeatWrapping;
-            wallTexture.wrapT = THREE.RepeatWrapping;
+            const wallTex = createWallTexture(levelD.wallBase, levelD.wallLine);
+            wallTex.wrapS = THREE.RepeatWrapping; wallTex.wrapT = THREE.RepeatWrapping;
+            const wallMat = new THREE.MeshStandardMaterial({ map: wallTex, roughness: 0.8 });
+            const floorMat = new THREE.MeshStandardMaterial({ map: createFloorTexture(levelD.floorBase, levelD.floorDot), roughness: 0.9 });
+            const ceilingMat = new THREE.MeshStandardMaterial({ color: levelD.ceilColor, roughness: 0.5 });
 
-            const wallMat = new THREE.MeshStandardMaterial({ map: wallTexture, roughness: 0.8 });
-            const floorMat = new THREE.MeshStandardMaterial({ map: createFloorTexture(), roughness: 0.9 });
-            const ceilingMat = new THREE.MeshStandardMaterial({ color: 0xb8b07d, roughness: 0.5 });
-
-            // Floor & Ceiling
             const totalMapSize = MAP_SIZE * UNIT_SIZE;
-            const planeGeo = new THREE.PlaneGeometry(totalMapSize, totalMapSize);
-
-            const floor = new THREE.Mesh(planeGeo, floorMat);
-            floor.rotation.x = -Math.PI / 2;
-            floor.position.set(totalMapSize / 2, 0, totalMapSize / 2);
+            const floor = new THREE.Mesh(new THREE.PlaneGeometry(totalMapSize, totalMapSize), floorMat);
+            floor.rotation.x = -Math.PI / 2; floor.position.set(totalMapSize / 2, 0, totalMapSize / 2);
             scene.add(floor);
 
-            const ceiling = new THREE.Mesh(planeGeo, ceilingMat);
-            ceiling.rotation.x = Math.PI / 2;
-            ceiling.position.set(totalMapSize / 2, 3, totalMapSize / 2);
+            const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(totalMapSize, totalMapSize), ceilingMat);
+            ceiling.rotation.x = Math.PI / 2; ceiling.position.set(totalMapSize / 2, 3, totalMapSize / 2);
             scene.add(ceiling);
 
-            // Build Walls & Ceiling Lights (蛍光灯)
+            lightsList = [];
+            entities = [];
+
             const wallGeo = new THREE.BoxGeometry(UNIT_SIZE, 3, UNIT_SIZE);
             const lightGeo = new THREE.BoxGeometry(1.6, 0.1, 0.4);
-            const lightMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
 
             for (let r = 0; r < MAP_SIZE; r++) {
                 for (let c = 0; c < MAP_SIZE; c++) {
@@ -483,45 +417,49 @@
                         wall.position.set(c * UNIT_SIZE + UNIT_SIZE / 2, 1.5, r * UNIT_SIZE + UNIT_SIZE / 2);
                         scene.add(wall);
                     } else if ((r % 3 === 0 && c % 3 === 0)) {
-                        // 蛍光灯モデルの設置
-                        const ceilLightMesh = new THREE.Mesh(lightGeo, lightMat);
+                        const ceilLightMesh = new THREE.Mesh(lightGeo, new THREE.MeshBasicMaterial({ color: 0xffffff }));
                         ceilLightMesh.position.set(c * UNIT_SIZE + UNIT_SIZE/2, 2.95, r * UNIT_SIZE + UNIT_SIZE/2);
                         scene.add(ceilLightMesh);
-
-                        // ポイントライト（照明）
-                        const pLight = new THREE.PointLight(0xfff5cc, 1.2, 12);
+                        const pLight = new THREE.PointLight(0xfff5cc, levelD.ambientIntensity, 12);
                         pLight.position.set(c * UNIT_SIZE + UNIT_SIZE/2, 2.7, r * UNIT_SIZE + UNIT_SIZE/2);
                         scene.add(pLight);
-
-                        lightsList.push({ light: pLight, baseIntensity: 1.2, mesh: ceilLightMesh });
+                        lightsList.push({ light: pLight, baseIntensity: levelD.ambientIntensity, mesh: ceilLightMesh });
                     }
                 }
             }
 
-            // --- SPAWN EXIT DOOR (クリア地点) ---
+            // Spawn Exit
             exitDoor = createExitDoorMesh();
             exitDoor.position.set(12 * UNIT_SIZE + 2, 0, 11 * UNIT_SIZE + 2);
             scene.add(exitDoor);
 
-            // --- SPAWN ENTITIES ---
-            // 1. Howler
-            const howlerMesh = createHowlerMesh();
-            howlerMesh.position.set(11.5 * UNIT_SIZE, 0, 11.5 * UNIT_SIZE);
-            scene.add(howlerMesh);
-            entities.push({ name: "ハウラー", mesh: howlerMesh, speed: 0.048, type: "howler" });
+            // Spawn Entities based on Level
+            levelD.entities.forEach((eType, index) => {
+                let mesh, speed, name;
+                if (eType === "howler") { mesh = createHowlerMesh(); speed = 0.048; name = "ハウラー"; }
+                if (eType === "smiler") { mesh = createSmilerMesh(); speed = 0.04; name = "スマイリー"; }
+                if (eType === "hound") { mesh = createHoundMesh(); speed = 0.06; name = "ハウンド"; }
+                if (eType === "faceling") { mesh = createFacelingMesh(); speed = 0.035; name = "フェイスリング"; }
+                
+                // 配置を少しずらす
+                mesh.position.set((11.5 - index*2) * UNIT_SIZE, 0, 11.5 * UNIT_SIZE);
+                scene.add(mesh);
+                entities.push({ name: name, mesh: mesh, speed: speed, type: eType });
+            });
 
-            // 2. Smiler
-            const smilerMesh = createSmilerMesh();
-            smilerMesh.position.set(1.5 * UNIT_SIZE, 0, 11.5 * UNIT_SIZE);
-            scene.add(smilerMesh);
-            entities.push({ name: "スマイリー", mesh: smilerMesh, speed: 0.04, type: "smiler" });
-
-            // Events
-            window.addEventListener('resize', onWindowResize);
-            setupControls();
+            if (!isEventsSetup) {
+                setupControls();
+                window.addEventListener('resize', () => {
+                    camera.aspect = window.innerWidth / window.innerHeight;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                });
+                isEventsSetup = true;
+                animate();
+            }
         }
 
-        // --- 6. CONTROLS ---
+        // --- CONTROLS (絶対にいじらない部分) ---
         function setupControls() {
             window.addEventListener('keydown', (e) => {
                 if (e.code === 'KeyW' || e.code === 'ArrowUp') moveForward = true;
@@ -529,14 +467,12 @@
                 if (e.code === 'KeyA' || e.code === 'ArrowLeft') moveLeft = true;
                 if (e.code === 'KeyD' || e.code === 'ArrowRight') moveRight = true;
             });
-
             window.addEventListener('keyup', (e) => {
                 if (e.code === 'KeyW' || e.code === 'ArrowUp') moveForward = false;
                 if (e.code === 'KeyS' || e.code === 'ArrowDown') moveBackward = false;
                 if (e.code === 'KeyA' || e.code === 'ArrowLeft') moveLeft = false;
                 if (e.code === 'KeyD' || e.code === 'ArrowRight') moveRight = false;
             });
-
             document.addEventListener('mousemove', (e) => {
                 if (!isPlaying) return;
                 if (document.pointerLockElement === document.body || isMobile) {
@@ -545,7 +481,6 @@
                     pitch = Math.max(-Math.PI / 2.3, Math.min(Math.PI / 2.3, pitch));
                 }
             });
-
             if (isMobile) {
                 touchControls.style.display = 'block';
                 setupTouchEvents();
@@ -556,102 +491,69 @@
             const joystickZone = document.getElementById('joystick-zone');
             const joystickKnob = document.getElementById('joystick-knob');
             const lookZone = document.getElementById('look-zone');
-
-            let moveTouchId = null;
-            let lookTouchId = null;
-            let touchStartX = 0, touchStartY = 0;
-            let lastLookX = 0, lastLookY = 0;
+            let moveTouchId = null, lookTouchId = null;
+            let touchStartX = 0, touchStartY = 0, lastLookX = 0, lastLookY = 0;
 
             joystickZone.addEventListener('touchstart', (e) => {
                 for (let touch of e.changedTouches) {
                     if (moveTouchId === null) {
                         moveTouchId = touch.identifier;
-                        touchStartX = touch.clientX;
-                        touchStartY = touch.clientY;
+                        touchStartX = touch.clientX; touchStartY = touch.clientY;
                     }
                 }
             });
-
             window.addEventListener('touchmove', (e) => {
                 for (let touch of e.changedTouches) {
                     if (touch.identifier === moveTouchId) {
-                        let dx = touch.clientX - touchStartX;
-                        let dy = touch.clientY - touchStartY;
+                        let dx = touch.clientX - touchStartX, dy = touch.clientY - touchStartY;
                         let dist = Math.min(Math.hypot(dx, dy), 40);
                         let angle = Math.atan2(dy, dx);
-
                         joystickKnob.style.transform = `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px)`;
-
-                        moveForward = dy < -10;
-                        moveBackward = dy > 10;
-                        moveLeft = dx < -10;
-                        moveRight = dx > 10;
+                        moveForward = dy < -10; moveBackward = dy > 10; moveLeft = dx < -10; moveRight = dx > 10;
                     }
                     if (touch.identifier === lookTouchId) {
-                        let dx = touch.clientX - lastLookX;
-                        let dy = touch.clientY - lastLookY;
-                        yaw -= dx * 0.006;
-                        pitch -= dy * 0.006;
+                        yaw -= (touch.clientX - lastLookX) * 0.006;
+                        pitch -= (touch.clientY - lastLookY) * 0.006;
                         pitch = Math.max(-Math.PI / 2.3, Math.min(Math.PI / 2.3, pitch));
-                        lastLookX = touch.clientX;
-                        lastLookY = touch.clientY;
+                        lastLookX = touch.clientX; lastLookY = touch.clientY;
                     }
                 }
             });
-
             const resetTouch = (e) => {
                 for (let touch of e.changedTouches) {
                     if (touch.identifier === moveTouchId) {
-                        moveTouchId = null;
-                        joystickKnob.style.transform = `translate(0px, 0px)`;
+                        moveTouchId = null; joystickKnob.style.transform = `translate(0px, 0px)`;
                         moveForward = moveBackward = moveLeft = moveRight = false;
                     }
-                    if (touch.identifier === lookTouchId) {
-                        lookTouchId = null;
-                    }
+                    if (touch.identifier === lookTouchId) lookTouchId = null;
                 }
             };
-
             window.addEventListener('touchend', resetTouch);
             window.addEventListener('touchcancel', resetTouch);
-
             lookZone.addEventListener('touchstart', (e) => {
                 for (let touch of e.changedTouches) {
                     if (lookTouchId === null) {
                         lookTouchId = touch.identifier;
-                        lastLookX = touch.clientX;
-                        lastLookY = touch.clientY;
+                        lastLookX = touch.clientX; lastLookY = touch.clientY;
                     }
                 }
             });
         }
 
-        // --- 7. LOGIC & GAME LOOP ---
+        // --- LOGIC ---
         function checkWallCollision(newX, newZ) {
             const padding = 0.5;
-            const checkPoints = [
-                { x: newX + padding, z: newZ + padding },
-                { x: newX - padding, z: newZ + padding },
-                { x: newX + padding, z: newZ - padding },
-                { x: newX - padding, z: newZ - padding }
-            ];
-
-            for (let pt of checkPoints) {
-                const gridX = Math.floor(pt.x / UNIT_SIZE);
-                const gridZ = Math.floor(pt.z / UNIT_SIZE);
-                if (gridX < 0 || gridX >= MAP_SIZE || gridZ < 0 || gridZ >= MAP_SIZE) return true;
-                if (map[gridZ][gridX] === 1) return true;
+            const pts = [{x:newX+padding, z:newZ+padding}, {x:newX-padding, z:newZ+padding}, {x:newX+padding, z:newZ-padding}, {x:newX-padding, z:newZ-padding}];
+            for (let pt of pts) {
+                const gX = Math.floor(pt.x / UNIT_SIZE), gZ = Math.floor(pt.z / UNIT_SIZE);
+                if (gX < 0 || gX >= MAP_SIZE || gZ < 0 || gZ >= MAP_SIZE || map[gZ][gX] === 1) return true;
             }
             return false;
         }
 
         function updatePlayer() {
-            const dirX = Math.sin(yaw);
-            const dirZ = Math.cos(yaw);
-
-            let moveX = 0;
-            let moveZ = 0;
-
+            const dirX = Math.sin(yaw), dirZ = Math.cos(yaw);
+            let moveX = 0, moveZ = 0;
             if (moveForward)  { moveX -= dirX; moveZ -= dirZ; }
             if (moveBackward) { moveX += dirX; moveZ += dirZ; }
             if (moveLeft)     { moveX -= dirZ; moveZ += dirX; }
@@ -659,34 +561,22 @@
 
             const len = Math.hypot(moveX, moveZ);
             if (len > 0) {
-                moveX = (moveX / len) * player.speed;
-                moveZ = (moveZ / len) * player.speed;
-
-                if (!checkWallCollision(camera.position.x + moveX, camera.position.z)) {
-                    camera.position.x += moveX;
-                }
-                if (!checkWallCollision(camera.position.x, camera.position.z + moveZ)) {
-                    camera.position.z += moveZ;
-                }
-            }
-
-            // Head Bobbing (揺れ)
-            if (len > 0) {
+                moveX = (moveX / len) * player.speed; moveZ = (moveZ / len) * player.speed;
+                if (!checkWallCollision(camera.position.x + moveX, camera.position.z)) camera.position.x += moveX;
+                if (!checkWallCollision(camera.position.x, camera.position.z + moveZ)) camera.position.z += moveZ;
                 camera.position.y = 1.6 + Math.sin(Date.now() * 0.012) * 0.05;
+                
+                // サウンド再生
+                playSound('step');
             } else {
                 camera.position.y = 1.6;
             }
 
             camera.rotation.order = "YXZ";
-            camera.rotation.y = yaw;
-            camera.rotation.x = pitch;
+            camera.rotation.y = yaw; camera.rotation.x = pitch;
 
-            // --- クリア判定 (EXITの扉に近づいたか) ---
-            if (exitDoor) {
-                const distToExit = Math.hypot(camera.position.x - exitDoor.position.x, camera.position.z - exitDoor.position.z);
-                if (distToExit < 1.8) {
-                    gameClear();
-                }
+            if (exitDoor && Math.hypot(camera.position.x - exitDoor.position.x, camera.position.z - exitDoor.position.z) < 1.8) {
+                gameClear();
             }
         }
 
@@ -695,104 +585,90 @@
                 const dx = camera.position.x - ent.mesh.position.x;
                 const dz = camera.position.z - ent.mesh.position.z;
                 const dist = Math.hypot(dx, dz);
-
-                // Smiler Face Always Faces Player
+                
                 if (ent.type === "smiler") {
                     ent.mesh.lookAt(camera.position.x, 1.5, camera.position.z);
-                } else if (ent.type === "howler") {
+                } else if (ent.type === "hound") {
+                    ent.mesh.lookAt(camera.position.x, 0.4, camera.position.z);
+                } else {
                     ent.mesh.lookAt(camera.position.x, 0, camera.position.z);
                 }
 
-                // AI Chase Logic
                 if (dist < 18) {
                     ent.mesh.position.x += (dx / dist) * ent.speed;
                     ent.mesh.position.z += (dz / dist) * ent.speed;
                 }
 
-                // Game Over Trigger
-                if (dist < 1.3) {
-                    gameOver(ent.name);
-                }
+                if (dist < 1.3) gameOver(ent.name);
             }
         }
 
-        // 蛍光灯のちらつき効果
         function updateFluorescentLights() {
             lightsList.forEach(item => {
-                if (Math.random() < 0.03) {
-                    item.light.intensity = Math.random() < 0.5 ? 0.2 : item.baseIntensity;
-                } else {
-                    item.light.intensity = item.baseIntensity;
-                }
+                item.light.intensity = Math.random() < 0.03 ? 0.2 : item.baseIntensity;
             });
         }
 
-        // --- 8. STATE MANAGEMENT ---
+        // --- STATE MANAGEMENT ---
         function startGame() {
+            // AudioContextの再開を確実に
+            if(audioCtx.state === 'suspended') audioCtx.resume();
             screenOverlay.style.display = 'none';
             isPlaying = true;
-
-            if (!isMobile) {
-                document.body.requestPointerLock();
-            }
+            if (!isMobile) document.body.requestPointerLock();
         }
 
         function gameOver(killerName) {
             isPlaying = false;
+            playSound('death');
             if (document.exitPointerLock) document.exitPointerLock();
-
-            titleText.innerText = "YOU DIED";
-            titleText.style.color = "#ff3333";
-            descText.innerHTML = `<b>【${killerName}】</b>に捉えられてしまった...<br>バックルームの深淵へ消えていく。`;
-            startBtn.innerText = "リトライ";
-            screenOverlay.style.display = 'flex';
-
-            // Reset Positions
+            titleText.innerText = "YOU DIED"; titleText.style.color = "#ff3333";
+            descText.innerHTML = `<b>【${killerName}】</b>に捉えられてしまった...`;
+            startBtn.innerText = "リトライ"; screenOverlay.style.display = 'flex';
+            
+            // 現在のレベルをリロード
             camera.position.set(1.5 * UNIT_SIZE, 1.6, 1.5 * UNIT_SIZE);
-            entities[0].mesh.position.set(11.5 * UNIT_SIZE, 0, 11.5 * UNIT_SIZE); // Howler
-            entities[1].mesh.position.set(1.5 * UNIT_SIZE, 0, 11.5 * UNIT_SIZE);  // Smiler
             yaw = 0; pitch = 0;
+            initScene();
         }
 
         function gameClear() {
             isPlaying = false;
+            playSound('clear');
             if (document.exitPointerLock) document.exitPointerLock();
 
-            titleText.innerText = "STAGE CLEARED!";
-            titleText.style.color = "#55ff55";
-            descText.innerHTML = "無事に「EXIT」の扉へ到達した！<br>バックルームからの脱出に成功した！";
-            startBtn.innerText = "もう一度遊ぶ";
+            currentLevel++;
+            if (currentLevel >= levelsData.length) {
+                titleText.innerText = "ALL STAGE CLEARED!";
+                titleText.style.color = "#55ff55";
+                descText.innerHTML = "全ての階層を突破し、現実世界へ帰還した！<br>おめでとう！";
+                startBtn.innerText = "最初から遊ぶ";
+                currentLevel = 0; // リセット
+            } else {
+                titleText.innerText = "LEVEL CLEARED";
+                titleText.style.color = "#55ff55";
+                descText.innerHTML = `無事に扉へ到達した！<br>次は ${levelsData[currentLevel].name} へ進む...`;
+                startBtn.innerText = "次のLevelへ";
+            }
+            
             screenOverlay.style.display = 'flex';
-
-            // Reset Positions
             camera.position.set(1.5 * UNIT_SIZE, 1.6, 1.5 * UNIT_SIZE);
-            entities[0].mesh.position.set(11.5 * UNIT_SIZE, 0, 11.5 * UNIT_SIZE);
-            entities[1].mesh.position.set(1.5 * UNIT_SIZE, 0, 11.5 * UNIT_SIZE);
             yaw = 0; pitch = 0;
+            initScene();
         }
 
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-
-        // --- 9. MAIN RENDER LOOP ---
         function animate() {
             requestAnimationFrame(animate);
-
             if (isPlaying) {
                 updatePlayer();
                 updateEntities();
                 updateFluorescentLights();
             }
-
-            renderer.render(scene, camera);
+            if (renderer && scene && camera) renderer.render(scene, camera);
         }
 
         startBtn.addEventListener('click', startGame);
-        init();
-        animate();
+        initScene();
     </script>
 </body>
 </html>
