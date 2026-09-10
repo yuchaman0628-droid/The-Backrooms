@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>The Backrooms 3D</title>
+    <title>The Backrooms 3D - Deluxe</title>
     <style>
         * {
             box-sizing: border-box;
@@ -49,20 +49,29 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 6px;
-            height: 6px;
-            background-color: rgba(255, 255, 255, 0.6);
+            width: 4px;
+            height: 4px;
+            background-color: rgba(255, 255, 255, 0.7);
             border-radius: 50%;
             transform: translate(-50%, -50%);
             pointer-events: none;
             z-index: 2;
         }
 
+        /* Vignette Screen Effect */
+        #vignette {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.9);
+            pointer-events: none;
+            z-index: 1;
+        }
+
         /* Start / Game Over Overlay */
         #screen-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(0, 0, 0, 0.9);
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -73,11 +82,11 @@
         }
 
         h1 {
-            font-size: 38px;
+            font-size: 40px;
             margin-bottom: 15px;
-            letter-spacing: 4px;
+            letter-spacing: 5px;
             color: #e6df75;
-            text-shadow: 0 0 10px rgba(230, 223, 117, 0.5);
+            text-shadow: 0 0 12px rgba(230, 223, 117, 0.6);
             text-align: center;
         }
 
@@ -90,7 +99,7 @@
         }
 
         button {
-            padding: 12px 30px;
+            padding: 12px 32px;
             font-size: 18px;
             font-family: inherit;
             font-weight: bold;
@@ -156,23 +165,24 @@
 </head>
 <body>
     <div id="canvas-container"></div>
+    <div id="vignette"></div>
     <div id="crosshair"></div>
 
     <div id="ui">
         <div class="hud-text">LEVEL 0 - THE BACKROOMS</div>
-        <div class="hud-text">【ライト常時点灯】徘徊する影から逃げろ...</div>
+        <div class="hud-text" id="status-text">【懐中電灯装備】ハウラーとスマイリーに注意せよ...</div>
     </div>
 
     <!-- Start / Game Over Screen -->
     <div id="screen-overlay">
         <h1 id="title-text">THE BACKROOMS</h1>
         <p id="desc-text">
-            迷い込んだ無限の迷路。<br>
-            ライトで周囲を照らしながら出口を探せ。<br><br>
-            <b>[PC操作]</b><br>画面クリックで開始 / WASDキーで移動 / マウスで視点移動<br><br>
-            <b>[スマホ操作]</b><br>画面左のスティックで移動 / 画面右側ドラッグで視点移動
+            蛍光灯が明滅する黄色い迷宮。<br>
+            異形「ハウラー」と暗闇の「スマイリー」から逃げ延びろ。<br><br>
+            <b>[PC操作]</b> WASD移動 / マウス視点移動<br>
+            <b>[スマホ操作]</b> 左スティック移動 / 右エリアドラッグ視点移動
         </p>
-        <button id="start-btn">ゲームを開始する</button>
+        <button id="start-btn">探索を開始する</button>
     </div>
 
     <!-- Mobile Touch Controls -->
@@ -185,30 +195,35 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script>
-        // --- 1. MAP DESIGN (1 = Wall, 0 = Passage) ---
-        const MAP_SIZE = 12;
+        // --- 1. MAP DESIGN ---
+        const MAP_SIZE = 14;
         const map = [
-            [1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,0,0,0,1,0,0,0,0,0,0,1],
-            [1,0,1,0,1,0,1,1,1,1,0,1],
-            [1,0,1,0,0,0,0,0,0,1,0,1],
-            [1,0,1,1,1,1,0,1,0,1,0,1],
-            [1,0,0,0,0,1,0,1,0,0,0,1],
-            [1,1,1,0,1,1,0,1,1,1,0,1],
-            [1,0,0,0,0,0,0,0,0,1,0,1],
-            [1,0,1,1,1,1,1,1,0,1,0,1],
-            [1,0,1,0,0,0,0,1,0,0,0,1],
-            [1,0,0,0,1,1,0,0,0,1,0,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1]
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,0,0,0,1,0,0,0,0,0,0,0,0,1],
+            [1,0,1,0,1,0,1,1,1,1,0,1,0,1],
+            [1,0,1,0,0,0,0,0,0,1,0,1,0,1],
+            [1,0,1,1,1,1,0,1,0,1,0,1,0,1],
+            [1,0,0,0,0,1,0,1,0,0,0,0,0,1],
+            [1,1,1,0,1,1,0,1,1,1,1,1,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,1,0,1],
+            [1,0,1,1,1,1,0,1,1,1,0,1,0,1],
+            [1,0,1,0,0,0,0,1,0,0,0,0,0,1],
+            [1,0,0,0,1,1,0,1,0,1,1,1,0,1],
+            [1,0,1,0,0,0,0,0,0,1,0,0,0,1],
+            [1,0,1,1,1,1,0,1,0,0,0,1,0,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1]
         ];
 
         const UNIT_SIZE = 4;
 
-        // --- 2. GAME VARIABLES ---
-        let scene, camera, renderer, flashlight, ambientLight;
+        // --- 2. GAME SETUP & VARIABLES ---
+        let scene, camera, renderer;
+        let flashlight, flashlightBeam;
+        let ambientLight;
         let isPlaying = false;
-        
-        // Input Control States
+        let lightsList = [];
+
+        // Input States
         let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
         let yaw = 0, pitch = 0;
 
@@ -216,16 +231,11 @@
         const player = {
             x: 1.5 * UNIT_SIZE,
             z: 1.5 * UNIT_SIZE,
-            speed: 0.08
+            speed: 0.085
         };
 
-        // Entity (Enemy) Data
-        const entity = {
-            mesh: null,
-            x: 9.5 * UNIT_SIZE,
-            z: 9.5 * UNIT_SIZE,
-            speed: 0.04
-        };
+        // Entities Data
+        const entities = [];
 
         // UI Elements
         const screenOverlay = document.getElementById('screen-overlay');
@@ -241,24 +251,18 @@
             const canvas = document.createElement('canvas');
             canvas.width = 256; canvas.height = 256;
             const ctx = canvas.getContext('2d');
-            
-            // Yellow base
-            ctx.fillStyle = '#dbce6b';
+            ctx.fillStyle = '#ccbe5a';
             ctx.fillRect(0, 0, 256, 256);
-            
-            // Vertical wallpaper pattern
-            ctx.strokeStyle = '#b8aa48';
-            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#a89a42';
+            ctx.lineWidth = 4;
             for(let i = 0; i < 256; i += 16) {
                 ctx.beginPath();
                 ctx.moveTo(i, 0); ctx.lineTo(i, 256);
                 ctx.stroke();
             }
-
-            // Dirty Noise
-            for (let i = 0; i < 1500; i++) {
-                ctx.fillStyle = Math.random() > 0.5 ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)';
-                ctx.fillRect(Math.random()*256, Math.random()*256, 3, 3);
+            for (let i = 0; i < 2000; i++) {
+                ctx.fillStyle = Math.random() > 0.5 ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.05)';
+                ctx.fillRect(Math.random()*256, Math.random()*256, 2, 2);
             }
             return new THREE.CanvasTexture(canvas);
         }
@@ -267,13 +271,10 @@
             const canvas = document.createElement('canvas');
             canvas.width = 128; canvas.height = 128;
             const ctx = canvas.getContext('2d');
-            
-            // Carpet Base
-            ctx.fillStyle = '#6e633d';
+            ctx.fillStyle = '#5e5433';
             ctx.fillRect(0, 0, 128, 128);
-            
-            for (let i = 0; i < 1000; i++) {
-                ctx.fillStyle = Math.random() > 0.5 ? '#52492a' : '#85784d';
+            for (let i = 0; i < 1500; i++) {
+                ctx.fillStyle = Math.random() > 0.5 ? '#423b22' : '#786c44';
                 ctx.fillRect(Math.random()*128, Math.random()*128, 2, 2);
             }
             const texture = new THREE.CanvasTexture(canvas);
@@ -283,48 +284,163 @@
             return texture;
         }
 
-        // --- 4. SCENE INITIALIZATION ---
+        // Smiler Face Texture Generator
+        function createSmilerTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256; canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, 256, 256);
+
+            // Glowing White Face
+            ctx.fillStyle = '#ffffff';
+            ctx.shadowColor = '#ffffff';
+            ctx.shadowBlur = 15;
+
+            // Eyes
+            ctx.beginPath();
+            ctx.ellipse(80, 90, 25, 35, -0.2, 0, Math.PI * 2);
+            ctx.ellipse(176, 90, 25, 35, 0.2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Wide Glowing Smile
+            ctx.beginPath();
+            ctx.arc(128, 130, 80, 0.1 * Math.PI, 0.9 * Math.PI, false);
+            ctx.lineWidth = 12;
+            ctx.strokeStyle = '#ffffff';
+            ctx.stroke();
+
+            // Sharp Teeth Lines
+            for(let x = 60; x <= 196; x += 15) {
+                ctx.beginPath();
+                ctx.moveTo(x, 180);
+                ctx.lineTo(x, 205);
+                ctx.lineWidth = 4;
+                ctx.stroke();
+            }
+
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        // --- 4. ENTITY CREATORS (REALISTIC BUILD) ---
+        
+        // 1. Howler (ハウラー): ワイヤー・黒い管が絡み合った不気味な高身長の人型
+        function createHowlerMesh() {
+            const group = new THREE.Group();
+            const mat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3, metalness: 0.8 });
+
+            // Body (Spine/Torso)
+            const bodyGeo = new THREE.CylinderGeometry(0.15, 0.05, 2.8, 8);
+            const body = new THREE.Mesh(bodyGeo, mat);
+            body.position.y = 1.4;
+            group.add(body);
+
+            // Head (Deformed Mesh)
+            const headGeo = new THREE.IcosahedronGeometry(0.3, 1);
+            const head = new THREE.Mesh(headGeo, mat);
+            head.position.y = 2.9;
+            head.scale.set(0.8, 1.4, 0.8);
+            group.add(head);
+
+            // Long Twisted Arms
+            for (let side of [-1, 1]) {
+                const armGeo = new THREE.CylinderGeometry(0.04, 0.02, 2.2, 6);
+                const arm = new THREE.Mesh(armGeo, mat);
+                arm.position.set(side * 0.4, 1.8, 0.2);
+                arm.rotation.z = side * -0.3;
+                arm.rotation.x = 0.4;
+                group.add(arm);
+            }
+
+            // Tendrils (絡みつく黒い触手・ワイヤー)
+            for (let i = 0; i < 6; i++) {
+                const tendrilGeo = new THREE.TorusGeometry(0.3, 0.02, 4, 12, Math.PI);
+                const tendril = new THREE.Mesh(tendrilGeo, mat);
+                tendril.position.set((Math.random()-0.5)*0.3, 1.0 + i*0.3, (Math.random()-0.5)*0.3);
+                tendril.rotation.x = Math.random() * Math.PI;
+                group.add(tendril);
+            }
+
+            return group;
+        }
+
+        // 2. Smiler (スマイリー): 闇の中に不気味な白い顔だけが浮かび上がる怪異
+        function createSmilerMesh() {
+            const group = new THREE.Group();
+            
+            // Face Plane
+            const smilerTex = createSmilerTexture();
+            const planeGeo = new THREE.PlaneGeometry(1.8, 1.8);
+            const planeMat = new THREE.MeshBasicMaterial({
+                map: smilerTex,
+                transparent: true,
+                blending: THREE.AdditiveBlending
+            });
+            const face = new THREE.Mesh(planeGeo, planeMat);
+            face.position.y = 1.5;
+            group.add(face);
+
+            // Subtle Dim Light around Smiler
+            const smilerLight = new THREE.PointLight(0xffffff, 0.8, 3);
+            smilerLight.position.y = 1.5;
+            group.add(smilerLight);
+
+            return group;
+        }
+
+        // --- 5. SCENE SETUP ---
         function init() {
             const container = document.getElementById('canvas-container');
 
-            // Scene setup
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x050503);
-            scene.fog = new THREE.FogExp2(0x050503, 0.05);
+            scene.background = new THREE.Color(0x020202);
+            scene.fog = new THREE.FogExp2(0x020202, 0.075);
 
-            // Camera setup
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
             camera.position.set(player.x, 1.6, player.z);
 
-            // Renderer setup
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             container.appendChild(renderer.domElement);
 
-            // --- LIGHTING (ライトの設定) ---
-            // 1. 環境光（全体をうっすら明るくする）
-            ambientLight = new THREE.AmbientLight(0x444433, 0.5);
+            // Ambient Light
+            ambientLight = new THREE.AmbientLight(0x222218, 0.4);
             scene.add(ambientLight);
 
-            // 2. プレイヤーが持つ懐中電灯（スポットライト）
-            flashlight = new THREE.SpotLight(0xffffff, 1.8, 22, Math.PI / 5, 0.4, 1);
+            // --- FLASHLIGHT (リアルな懐中電灯) ---
+            flashlight = new THREE.SpotLight(0xfffaed, 3.5, 25, Math.PI / 6, 0.3, 1.5);
             camera.add(flashlight);
-            flashlight.position.set(0, 0, 0);
+            flashlight.position.set(0.2, -0.2, 0); // 手元に配置
             flashlight.target.position.set(0, 0, -1);
             camera.add(flashlight.target);
+
+            // Flashlight Beam Cone (光のすじ)
+            const beamGeo = new THREE.ConeGeometry(2.5, 12, 16, 1, true);
+            const beamMat = new THREE.MeshBasicMaterial({
+                color: 0xfffaed,
+                transparent: true,
+                opacity: 0.03,
+                side: THREE.DoubleSide
+            });
+            flashlightBeam = new THREE.Mesh(beamGeo, beamMat);
+            flashlightBeam.rotation.x = -Math.PI / 2;
+            flashlightBeam.position.set(0, 0, -6);
+            camera.add(flashlightBeam);
+
             scene.add(camera);
 
-            // Materials & Textures
+            // Textures & Materials
             const wallTexture = createWallTexture();
             wallTexture.wrapS = THREE.RepeatWrapping;
             wallTexture.wrapT = THREE.RepeatWrapping;
 
-            const wallMat = new THREE.MeshLambertMaterial({ map: wallTexture });
-            const floorMat = new THREE.MeshLambertMaterial({ map: createFloorTexture() });
-            const ceilingMat = new THREE.MeshLambertMaterial({ color: 0xc7c08d });
+            const wallMat = new THREE.MeshStandardMaterial({ map: wallTexture, roughness: 0.8 });
+            const floorMat = new THREE.MeshStandardMaterial({ map: createFloorTexture(), roughness: 0.9 });
+            const ceilingMat = new THREE.MeshStandardMaterial({ color: 0xb8b07d, roughness: 0.5 });
 
-            // Create Floor & Ceiling
+            // Floor & Ceiling
             const totalMapSize = MAP_SIZE * UNIT_SIZE;
             const planeGeo = new THREE.PlaneGeometry(totalMapSize, totalMapSize);
 
@@ -338,33 +454,53 @@
             ceiling.position.set(totalMapSize / 2, 3, totalMapSize / 2);
             scene.add(ceiling);
 
-            // Build Wall Mesh
+            // Build Walls & Ceiling Lights (蛍光灯)
             const wallGeo = new THREE.BoxGeometry(UNIT_SIZE, 3, UNIT_SIZE);
+            const lightGeo = new THREE.BoxGeometry(1.6, 0.1, 0.4);
+            const lightMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
             for (let r = 0; r < MAP_SIZE; r++) {
                 for (let c = 0; c < MAP_SIZE; c++) {
                     if (map[r][c] === 1) {
                         const wall = new THREE.Mesh(wallGeo, wallMat);
                         wall.position.set(c * UNIT_SIZE + UNIT_SIZE / 2, 1.5, r * UNIT_SIZE + UNIT_SIZE / 2);
                         scene.add(wall);
+                    } else if ((r % 3 === 0 && c % 3 === 0)) {
+                        // 蛍光灯モデルの設置
+                        const ceilLightMesh = new THREE.Mesh(lightGeo, lightMat);
+                        ceilLightMesh.position.set(c * UNIT_SIZE + UNIT_SIZE/2, 2.95, r * UNIT_SIZE + UNIT_SIZE/2);
+                        scene.add(ceilLightMesh);
+
+                        // ポイントライト（照明）
+                        const pLight = new THREE.PointLight(0xfff5cc, 0.8, 9);
+                        pLight.position.set(c * UNIT_SIZE + UNIT_SIZE/2, 2.7, r * UNIT_SIZE + UNIT_SIZE/2);
+                        scene.add(pLight);
+
+                        lightsList.push({ light: pLight, baseIntensity: 0.8, mesh: ceilLightMesh });
                     }
                 }
             }
 
-            // Create Monster (Entity)
-            const entityGeo = new THREE.CylinderGeometry(0.4, 0.4, 2.2, 8);
-            const entityMat = new THREE.MeshBasicMaterial({ color: 0x0a0a0a, wireframe: true });
-            entity.mesh = new THREE.Mesh(entityGeo, entityMat);
-            entity.mesh.position.set(entity.x, 1.1, entity.z);
-            scene.add(entity.mesh);
+            // --- SPAWN ENTITIES ---
+            // 1. Howler
+            const howlerMesh = createHowlerMesh();
+            howlerMesh.position.set(11.5 * UNIT_SIZE, 0, 11.5 * UNIT_SIZE);
+            scene.add(howlerMesh);
+            entities.push({ name: "ハウラー", mesh: howlerMesh, speed: 0.048, type: "howler" });
 
-            // Event Listeners
+            // 2. Smiler
+            const smilerMesh = createSmilerMesh();
+            smilerMesh.position.set(1.5 * UNIT_SIZE, 0, 11.5 * UNIT_SIZE);
+            scene.add(smilerMesh);
+            entities.push({ name: "スマイリー", mesh: smilerMesh, speed: 0.04, type: "smiler" });
+
+            // Events
             window.addEventListener('resize', onWindowResize);
             setupControls();
         }
 
-        // --- 5. INPUT CONTROLS ---
+        // --- 6. CONTROLS ---
         function setupControls() {
-            // Keyboard Controls
             window.addEventListener('keydown', (e) => {
                 if (e.code === 'KeyW' || e.code === 'ArrowUp') moveForward = true;
                 if (e.code === 'KeyS' || e.code === 'ArrowDown') moveBackward = true;
@@ -379,7 +515,6 @@
                 if (e.code === 'KeyD' || e.code === 'ArrowRight') moveRight = false;
             });
 
-            // Mouse Look (PC)
             document.addEventListener('mousemove', (e) => {
                 if (!isPlaying) return;
                 if (document.pointerLockElement === document.body || isMobile) {
@@ -389,7 +524,6 @@
                 }
             });
 
-            // Mobile Controls
             if (isMobile) {
                 touchControls.style.display = 'block';
                 setupTouchEvents();
@@ -470,9 +604,9 @@
             });
         }
 
-        // --- 6. LOGIC & MOVEMENT ---
+        // --- 7. LOGIC & GAME LOOP ---
         function checkWallCollision(newX, newZ) {
-            const padding = 0.5; // Player collision radius
+            const padding = 0.5;
             const checkPoints = [
                 { x: newX + padding, z: newZ + padding },
                 { x: newX - padding, z: newZ + padding },
@@ -506,47 +640,64 @@
                 moveX = (moveX / len) * player.speed;
                 moveZ = (moveZ / len) * player.speed;
 
-                // Move X with collision
                 if (!checkWallCollision(camera.position.x + moveX, camera.position.z)) {
                     camera.position.x += moveX;
                 }
-                // Move Z with collision
                 if (!checkWallCollision(camera.position.x, camera.position.z + moveZ)) {
                     camera.position.z += moveZ;
                 }
             }
 
-            // Head Bobbing Effect
+            // Head Bobbing (揺れ)
             if (len > 0) {
-                camera.position.y = 1.6 + Math.sin(Date.now() * 0.01) * 0.04;
+                camera.position.y = 1.6 + Math.sin(Date.now() * 0.012) * 0.05;
             } else {
                 camera.position.y = 1.6;
             }
 
-            // Apply Camera Rotation
             camera.rotation.order = "YXZ";
             camera.rotation.y = yaw;
             camera.rotation.x = pitch;
         }
 
-        function updateEntity() {
-            const dx = camera.position.x - entity.mesh.position.x;
-            const dz = camera.position.z - entity.mesh.position.z;
-            const dist = Math.hypot(dx, dz);
+        function updateEntities() {
+            for (let ent of entities) {
+                const dx = camera.position.x - ent.mesh.position.x;
+                const dz = camera.position.z - ent.mesh.position.z;
+                const dist = Math.hypot(dx, dz);
 
-            // Chase Player
-            if (dist < 18) {
-                entity.mesh.position.x += (dx / dist) * entity.speed;
-                entity.mesh.position.z += (dz / dist) * entity.speed;
-            }
+                // Smiler Face Always Faces Player
+                if (ent.type === "smiler") {
+                    ent.mesh.lookAt(camera.position.x, 1.5, camera.position.z);
+                } else if (ent.type === "howler") {
+                    ent.mesh.lookAt(camera.position.x, 0, camera.position.z);
+                }
 
-            // Game Over Collision
-            if (dist < 1.2) {
-                gameOver();
+                // AI Chase Logic
+                if (dist < 18) {
+                    ent.mesh.position.x += (dx / dist) * ent.speed;
+                    ent.mesh.position.z += (dz / dist) * ent.speed;
+                }
+
+                // Game Over Trigger
+                if (dist < 1.3) {
+                    gameOver(ent.name);
+                }
             }
         }
 
-        // --- 7. GAME STATE CONTROL ---
+        // 蛍光灯のちらつき効果（Flickering Effect）
+        function updateFluorescentLights() {
+            lightsList.forEach(item => {
+                if (Math.random() < 0.03) { // 確率でちらつく
+                    item.light.intensity = Math.random() < 0.5 ? 0.1 : item.baseIntensity;
+                } else {
+                    item.light.intensity = item.baseIntensity;
+                }
+            });
+        }
+
+        // --- 8. STATE MANAGEMENT ---
         function startGame() {
             screenOverlay.style.display = 'none';
             isPlaying = true;
@@ -556,21 +707,21 @@
             }
         }
 
-        function gameOver() {
+        function gameOver(killerName) {
             isPlaying = false;
             if (document.exitPointerLock) document.exitPointerLock();
 
             titleText.innerText = "YOU DIED";
             titleText.style.color = "#ff3333";
-            descText.innerHTML = "黒い影に捕まってしまった...<br>バックルームから脱出することはできなかった。";
+            descText.innerHTML = `<b>【${killerName}】</b>に捉えられてしまった...<br>バックルームの深淵へ消えていく。`;
             startBtn.innerText = "リトライ";
             screenOverlay.style.display = 'flex';
 
-            // Reset positions
+            // Reset Positions
             camera.position.set(1.5 * UNIT_SIZE, 1.6, 1.5 * UNIT_SIZE);
-            entity.mesh.position.set(9.5 * UNIT_SIZE, 1.1, 9.5 * UNIT_SIZE);
-            yaw = 0;
-            pitch = 0;
+            entities[0].mesh.position.set(11.5 * UNIT_SIZE, 0, 11.5 * UNIT_SIZE); // Howler
+            entities[1].mesh.position.set(1.5 * UNIT_SIZE, 0, 11.5 * UNIT_SIZE);  // Smiler
+            yaw = 0; pitch = 0;
         }
 
         function onWindowResize() {
@@ -579,19 +730,19 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
-        // --- 8. MAIN GAME LOOP ---
+        // --- 9. MAIN RENDER LOOP ---
         function animate() {
             requestAnimationFrame(animate);
 
             if (isPlaying) {
                 updatePlayer();
-                updateEntity();
+                updateEntities();
+                updateFluorescentLights();
             }
 
             renderer.render(scene, camera);
         }
 
-        // Initialize and Run
         startBtn.addEventListener('click', startGame);
         init();
         animate();
